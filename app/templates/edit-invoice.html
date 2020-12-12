@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>SB Admin 2 - Blank</title>
+
+  <!-- Custom fonts for this template-->
+  <link href="{{ url_for('static', filename='assets/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="{{ url_for('static', filename='assets/css/sb-admin-2.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+  <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script>
+
+    <link href="{{ url_for('static', filename='assets/vendor/datatables/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+
+<style>
+  
+  .center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+</style>
+</head>
+         
+
+<body>
+
+
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <img  src=" {{ url_for('static', filename='/assets/nono.png') }}" alt="" class="center">
+
+              <h6 class="m-0 font-weight-bold text-primary">Invoice</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
+                    {% if customer != None %}
+                        <h1>{{customer}}</h1>
+                    {% endif %}
+                    <h2>نوع الفاتورة : {{category}}</h2>
+                    <tr>
+
+                      <th>Name</th>
+                      <th>Price</th>
+                      <th>Quantity</th>                     
+                      <th>Save</th>
+                    </tr>
+                  </thead>
+                  <tfoot>
+                    <tr>
+                      <th><u>Total</u></th>
+                      <th><u>{{total}}</u></th>
+                    </tr>
+                    {% if remaining_balance != None %}
+                    <tr>
+                      <th><u>Remaining Balalnce</u></th>
+                      <th><u>{{remaining_balance}}</u></th>
+                    </tr>
+                    {% endif %}
+                  </tfoot>
+                  <tbody>
+                    {%for i in range(0, length)%} 
+                    <tr>
+                      <td>{{products[i][0]}}</td>
+                      <td contenteditable='true'>{{products[i][1][0]}}</td>
+                      <td contenteditable='true'>{{products[i][1][1]}}</td>
+                      <td>
+                        <button type="button" class="use-address" />
+                    </td>
+                    </tr>
+                    {%endfor%}
+                    
+
+                    <tr>
+                        <th><u>VAT {{vat_percentage}}%</u></th>
+                        <td>
+                            <strong>
+                                <u>
+                                    {{vat}}
+                                </u>
+                            </strong>   
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+              <!--img  src=" {{ url_for('static', filename='/assets/nono2.png') }}" alt="" class="center"-->
+
+          </div>
+
+        </div>
+        <!-- /.conta
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="{{ url_for('static', filename='assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="{{ url_for('static', filename='assets/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+  <!-- Custom scripts for all pages-->
+  <script src="{{ url_for('static', filename='assets/js/sb-admin-2.min.js') }}"></script>
+
+  <script type="text/javascript">
+    
+
+    $(".use-address").click(function() {
+    var $row = $(this).closest("tr");    // Find the row
+    var $tds = $row.find("td");
+    var $table_data;
+    var $product_name;
+    var $price;
+    var $quantity; 
+    var $count = 0;
+    var url = window.location.pathname;
+    console.log("URL: ")
+    console.log(url)
+    var id = url.substring(url.lastIndexOf('/') + 1);
+    console.log("URL Modified")
+    console.log(id)
+    $.each($tds, function() {
+        if($count == 0){
+          console.log("Counter is 0")
+          product_name = $(this).text()
+          console.log(product_name);
+          $count = $count +1;
+        }else if($count ==1 ){
+          console.log("Counter is 0")
+          price = $(this).text()
+          console.log($price);
+          $count = $count +1;
+        }else if($count == 2){
+          console.log("Counter is 0")
+          quantity = $(this).text()
+          console.log($quantity);
+          $count = $count +1;
+        }
+
+    });
+    $.ajax({
+      url: '/editables',
+      type: 'POST',
+      data: {name: product_name, price: price, quantity:quantity, id:id},
+      success: function(result){
+          console.log("okie dokie biaatch")
+          console.log(result);
+      }
+    });
+    
+});
+
+  </script>
+
+</body>
+
+
+</html>
