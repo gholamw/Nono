@@ -381,6 +381,8 @@
                       <th>سعر التجزئة</th>
                       <th>رقم الدرج</th>
                       <th>الكمية</th>
+                      <th>كمية المستودع</th>
+
                     </tr>
                   </thead>
                   <tfoot>
@@ -392,18 +394,22 @@
                       <th>سعر التجزئة</th>
                       <th>رقم الدرج</th>
                       <th>الكمية</th>
+                      <th>كمية المستودع</th>
+
                     </tr>
                   </tfoot>
                   <tbody>
                     {%for i in range(0, len)%} 
                     <tr>
-                      <td>{{products[i].id}}</td>
-                      <td>{{products[i].name}}</td>
-                      <td>{{products[i].bulk_price}}</td>
-                      <td>{{products[i].bulk_bulk_price}}</td>
-                      <td>{{products[i].single_price}}</td>
-                      <td>{{products[i].shelf}}</td>
-                      <td>{{products[i].quantity}}</td>
+                      <td>{{products[i].BranchTwoProduct.id}}</td>
+                      <td>{{products[i].BranchTwoProduct.name}}</td>
+                      <td>{{products[i].BranchTwoProduct.bulk_price}}</td>
+                      <td>{{products[i].BranchTwoProduct.bulk_bulk_price}}</td>
+                      <td>{{products[i].BranchTwoProduct.single_price}}</td>
+                      <td>{{products[i].BranchTwoProduct.shelf}}</td>
+                      <td>{{products[i].BranchTwoProduct.quantity}}</td>
+                      <td>{{products[i].Product.quantity}}</td>
+
                     </tr>
                     {%endfor%}
                   </tbody>

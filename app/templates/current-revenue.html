@@ -9,21 +9,30 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>SB Admin 2 - Tables</title>
+  <title>SB Admin 2 - Blank</title>
 
-  <!-- Custom fonts for this template -->
+  <!-- Custom fonts for this template-->
   <link href="static/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
-  <!-- Custom styles for this template -->
+  <!-- Custom styles for this template-->
   <link href="static/assets/css/sb-admin-2.min.css" rel="stylesheet">
-
-  <!-- Custom styles for this page -->
-  <link href="static/assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 
 </head>
 
 <body id="page-top">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <!-- <strong>Title</strong> --> {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
   <!-- Page Wrapper -->
   <div id="wrapper">
@@ -43,7 +52,7 @@
       <hr class="sidebar-divider my-0">
 
       <!-- Nav Item - Dashboard -->
-      <li class="nav-item">
+      <li class="nav-item active">
         <a class="nav-link" href="index.html">
           <i class="fas fa-fw fa-tachometer-alt"></i>
           <span>Dashboard</span></a>
@@ -173,11 +182,9 @@
         <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
           <!-- Sidebar Toggle (Topbar) -->
-          <form class="form-inline">
-            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-              <i class="fa fa-bars"></i>
-            </button>
-          </form>
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
 
           <!-- Topbar Search -->
           <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
@@ -358,59 +365,16 @@
         <div class="container-fluid">
 
           <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">Tables</h1>
-          <p class="mb-4">DataTables is a third party plugin that is used to generate the demo table below. For more information about DataTables, please visit the <a target="_blank" href="https://datatables.net">official DataTables documentation</a>.</p>
+          <h1 class="h3 mb-4 text-gray-800">Blank Page</h1>
 
-          <!-- DataTales Example -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">DataTables Example</h6>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                  <thead>
-                    <tr>
-                      <th>رقم الصنف</th>
-                      <th>اسم الصنف</th>
-                      <th>سعر الجملة</th>
-                      <th>سعر جملة الجملة</th>
-                      <th>سعر التجزئة</th>
-                      <th>رقم الدرج</th>
-                      <th>الكمية</th>
-                      <th>كمية المستودع</th>
-                    </tr>
-                  </thead>
-                  <tfoot>
-                    <tr>
-                      <th>رقم الصنف</th>
-                      <th>اسم الصنف</th>
-                      <th>سعر الجملة</th>
-                      <th>سعر جملة الجملة</th>
-                      <th>سعر التجزئة</th>
-                      <th>رقم الدرج</th>
-                      <th>الكمية</th>
-                      <th>كمية المستودع</th>
-                    </tr>
-                  </tfoot>
-                  <tbody>
-                    {%for i in range(0, len)%} 
-                    <tr>
-                      <td>{{products[i].BranchOneProduct.id}}</td>
-                      <td>{{products[i].BranchOneProduct.name}}</td>
-                      <td>{{products[i].BranchOneProduct.bulk_price}}</td>
-                      <td>{{products[i].BranchOneProduct.bulk_bulk_price}}</td>
-                      <td>{{products[i].BranchOneProduct.single_price}}</td>
-                      <td>{{products[i].BranchOneProduct.shelf}}</td>
-                      <td>{{products[i].BranchOneProduct.quantity}}</td>
-                       <td>{{products[i].Product.quantity}}</td>
-                    </tr>
-                    {%endfor%}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+
+      <!--form action="/add-customers-to-db" method="post" novalidate-->
+        {{ form.hidden_tag }}
+        <p>
+            {{ form.balance.label }}<br>
+            {{ form.balance(readonly=true) }}
+        </p>
+    <!--/form-->
 
         </div>
         <!-- /.container-fluid -->
@@ -458,6 +422,7 @@
     </div>
   </div>
 
+
   <!-- Bootstrap core JavaScript-->
   <script src="static/assets/vendor/jquery/jquery.min.js"></script>
   <script src="static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -467,13 +432,6 @@
 
   <!-- Custom scripts for all pages-->
   <script src="static/assets/js/sb-admin-2.min.js"></script>
-
-  <!-- Page level plugins -->
-  <script src="static/assets/vendor/datatables/jquery.dataTables.min.js"></script>
-  <script src="static/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-
-  <!-- Page level custom scripts -->
-  <script src="static/assets/js/demo/datatables-demo.js"></script>
 
 </body>
 

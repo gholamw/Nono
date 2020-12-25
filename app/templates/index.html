@@ -78,7 +78,9 @@
             <a class="collapse-item" href="/users">المستخدمين</a>
             <a class="collapse-item" href="/current-balance">الرصيد الحالي</a>
             <a class="collapse-item" href="/vat-balance">الرصيد الضريبي الحالي</a>
+            <a class="collapse-item" href="/current-revenue">الربح الحالي</a>
             <a class="collapse-item" href="/view-invoices-admin">عرض الفواتير</a>
+            <a class="collapse-item" href="/procurement">شراء من عملائنا</a>
 
 
             
@@ -113,7 +115,7 @@
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
           <i class="fas fa-fw fa-cog"></i>
-          <span>فرع رقم 1</span>
+          <span>فرع كيلو 8</span>
         </a>
         <div id="collapseThree" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
@@ -133,7 +135,7 @@
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
           <i class="fas fa-fw fa-cog"></i>
-          <span>فرع رقم 2</span>
+          <span>فرع الجوهرة</span>
         </a>
         <div id="collapseFour" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
@@ -354,6 +356,7 @@
         <div class="container-fluid">
 
           <!-- Page Heading -->
+          {% if user.admin %} 
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">لوحة التحكم</h1>
             <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
@@ -505,7 +508,7 @@
               </div>
             </div>
           </div>
-
+          {% endif %}
 
   <!-- Scroll to Top Button-->
   <a class="scroll-to-top rounded" href="#page-top">

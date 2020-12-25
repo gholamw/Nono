@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required, L
 from app import app, lm, db
 #from app.menu_views import *
 from flask import g,render_template, flash, redirect, session, Flask, url_for, request, jsonify
-from .forms import LoginForm, AddProductForm, AmendProductForm, SearchForm, SellCash, MoveStock, AddCustomerForm, SellLoan, Sadad, CreateUser, EditVAT, Refund, Spendings,RevenueAccount, VATAccount
+from .forms import LoginForm, AddProductForm, AmendProductForm, SearchForm, SellCash, MoveStock, AddCustomerForm, SellLoan, Sadad, CreateUser, EditVAT, Refund, Spendings,RevenueAccount, VATAccount,Procurement
 from .models import User, BranchOneProduct, BranchTwoProduct, CreditTransaction, DebitTransaction, Invoice, Product, Transaction, Inv, Account, VAT, Customer
 from flask_table import Table, Col, LinkCol
 from flask_wtf import Form as BaseForm
@@ -95,13 +95,41 @@ def loadExcel():
   for i in range(2, m_row + 1): 
     cell_obj = sheet_obj.cell(row = i, column = 1) 
     cell_obj1 =   sheet_obj.cell(row = i, column = 2) 
+    cell_obj2 =   sheet_obj.cell(row = i, column = 5) 
+    cell_obj3 =   sheet_obj.cell(row = i, column = 6) 
+
+    print(cell_obj.value)
+    print(cell_obj1.value)
+    print(cell_obj2.value)
+    print(cell_obj3.value)
+
+
   # Print value of cell object  
   # using the value attribute 
     print("Excel Data")
     print(i)
     print(cell_obj.value)
-    product = BranchTwoProduct(name=cell_obj.value, bulk_price = 0 , bulk_bulk_price = 0, single_price=0, shelf=cell_obj1.value, quantity=0)
-    db.session.add(product)
+    #product = Product(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, shelf=cell_obj1.value, quantity=0)
+    #product1 = BranchOneProduct(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, shelf=cell_obj1.value, quantity=0)
+    #product2 = BranchTwoProduct(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, shelf=cell_obj1.value, quantity=0)
+    product = Product.query.filter_by(name=cell_obj.value).first()
+    product1 = BranchOneProduct.query.filter_by(name=cell_obj.value).first()
+    product2 = BranchTwoProduct.query.filter_by(name=cell_obj.value).first()
+    product.single_price = cell_obj2.value
+    product.bulk_price = cell_obj3.value
+
+    product1.single_price = cell_obj2.value
+    product1.bulk_price = cell_obj3.value
+
+    product2.single_price = cell_obj2.value
+    product2.bulk_price = cell_obj3.value
+
+    db.session.commit()
+
+
+    #db.session.add(product)
+    #db.session.add(product1)
+    #db.session.add(product2)
     try:
       db.session.commit()
     except IntegrityError as err:
@@ -245,7 +273,7 @@ def login():
     #return render_template('login.html')
     #user = g.user
     db.create_all()
-    ##data = loadExcel()
+    #data = loadExcel()
     #data = loadExcelCustomer()
     #hashed_password = sha256_crypt.hash(str("123"))
     #user = User(username="adminn", hashed_password=hashed_password,admin = True, name = "Abdulrahman Sulimani",
@@ -255,7 +283,7 @@ def login():
     #db.session.add(user)
     #db.session.commit()
 
-    #account = Account(balance=0, description = "VAT Account")
+    #account = Account(balance=0, description = "Revenue Account")
     #db.session.add(account)
     #db.session.commit()
     accounts = Account.query.all()
@@ -273,6 +301,50 @@ def login():
     #print(all_ids)
     data = ""
     return render_template('login.html', form=form, data=data)
+
+@app.route('/procurement', methods=['GET', 'POST'])
+def procurement():
+  form = Procurement(request.form)
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  if form.submit.data:
+    print("SUBMIT")
+    print("My invoice selections are: ")
+    print(form.invoices_to_choose.data)
+    customer = Customer.query.filter_by(name=form.autocompcustomer.data).first()
+    print("Customer")
+    print(customer)
+    invs = customer.invoices
+    rem_balance = 0
+    print("Pay amount")
+    print(form.pay_amount.data)
+    print(form.invoices_to_choose.data.split('--- ')[1]) 
+    wanted_inv_id = int(form.invoices_to_choose.data.split('--- ')[1])
+    wanted_inv = Inv.query.filter_by(id=wanted_inv_id).first()
+    wanted_inv.remaining_balance = wanted_inv.remaining_balance - float(form.pay_amount.data)
+    db.session.commit()
+    flash(u'تمت العملية بنجاح', 'success')
+    return render_template('procurement.html', form=form, user=u)  
+
+  if form.invoices.data:
+    customer = Customer.query.filter_by(name=form.autocompcustomer.data).first()
+    #invs = Inv.query.filter_by(customer_id = customer.id, remaining_balance >= form.pay_amount.data).all()
+    invs = Inv.query.filter(Inv.remaining_balance >= form.pay_amount.data, Inv.customer_id == customer.id).all()
+    numb = 1
+    print("My dicts")
+    print(form.invoices_to_choose.choices)
+    for inv in invs:
+      #form.invoices_to_choose.choices['numb'] = "فاتورة: " + str(inv.id) + " --- " + "رصيد متبقي" + " "+ str( inv.remaining_balance)
+      #form.invoices_to_choose.choices.append("فاتورة: " + str(inv.id) + " --- " + "رصيد متبقي" + " "+ str( inv.remaining_balance))
+      form.invoices_to_choose.choices.append("SAR " + str(inv.remaining_balance) +  " --- " + str(inv.id))
+
+      numb = numb + 1
+    print(invs)
+    return render_template('procurement.html', form=form, user=u)  
+
+  return render_template('procurement.html', form=form, user=u)
 
 @app.route('/users', methods=['GET', 'POST'])
 def users():
@@ -331,9 +403,9 @@ def autocomplete():
     srch =[]
     print("Inside autocomplete")
     search = request.args.get('autocomplete')
-    print("Search words")
-    print(search)
-    print(NAMES)
+    #print("Search words")
+    #print(search)
+    #print(NAMES)
     product_list = []
     products = Product.query.all()
     for p in products:
@@ -349,9 +421,9 @@ def autocompleteb1():
     srch =[]
     print("Inside autocomplete")
     search = request.args.get('autocomplete')
-    print("Search words")
-    print(search)
-    print(NAMES)
+    #print("Search words")
+    #print(search)
+    #print(NAMES)
     product_list = []
     products = BranchOneProduct.query.all()
     for p in products:
@@ -366,14 +438,14 @@ def autocompletecustomer():
     srch =[]
     print("Inside autocomplete")
     search = request.args.get('autocomplete')
-    print("Search words")
-    print(search)
-    print(NAMES)
+    #print("Search words")
+    #print(search)
+    #print(NAMES)
     customer_list = []
     customers = Customer.query.all()
     for c in customers:
       customer_list.append(c.name)
-    print(customer_list)  
+    #print(customer_list)  
     #query = request.args.get('query')
     app.logger.debug(search)
     return jsonify(json_list=customer_list)
@@ -440,6 +512,22 @@ def currentBalance():
   print(account.balance)
   form.balance.data = account.balance
   return render_template('current-balance.html', form=form, user=u)
+
+
+@app.route("/current-revenue")
+@login_required
+def currentRevenueBalance():
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  form = RevenueAccount()
+  account = Account.query.filter_by(id=3).first()
+  print("Current Revenue Balance @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@: ")
+  print("::::::::::::::::::::::::................:::::::::::::........:::::::::::")
+  print(account.balance)
+  form.balance.data = account.balance
+  return render_template('current-revenue.html', form=form, user=u) 
 
 @app.route("/vat-balance")
 @login_required
@@ -689,6 +777,43 @@ def invoiceRefund(invoice_id):
           product = BranchTwoProduct.query.filter_by(name = key).first()
           product.quantity = p.quantity + int(value[1])  
 
+
+      
+      paid = 0
+      revenue = 0
+      revenue_total = 0       
+      for item in list_of_items: 
+        print(item)
+        print(item[0])
+        print(item[1])
+        print(item[1][0])
+        print(item[1][1])
+
+        product = Product.query.filter_by(name=item[0]).first()
+        paid = item[1][0] * item[1][1]
+        if p.category == "تجزئة":
+          print("Single")
+          revenue = product.single_expense
+        elif p.category == "جملة الجملة":
+          print("Bulk Bulk")
+          revenue = product.bulk_bulk_expense
+        elif p.category == "جملة":
+          print("Bulk")
+          revenue = product.bulk_expense
+        else:
+          print("INOVICE TYPE IS NON OF THE ABOVE")  
+
+        print(paid)
+        revenue = revenue * item[1][1]
+        print(revenue)
+        revenue = paid - revenue
+        print(revenue)
+        revenue_total += revenue
+        print(paid)
+        print(revenue)
+        print(revenue_total)
+      revenue_account = Account.query.filter_by(id=3).first()
+      revenue_account.balance = revenue_account.balance - revenue_total  
       print("Purchased products as a list: ")
       print(list_of_items)
       db.session.commit()
@@ -758,6 +883,37 @@ def invoiceRefund(invoice_id):
         return 'ok' 
       account.balance = account.balance - total_refund_amount
       vat_account.balance = vat_account.balance - vat_of_refund_amount
+
+      paid = 0
+      revenue = 0
+      revenue_total = 0       
+      qunatity = prod[1]
+      price = prod[0]
+      product = Product.query.filter_by(name=item[0]).first()
+      paid = qunatity * price
+      if p.category == "تجزئة":
+        print("Single")
+        revenue = product.single_expense
+      elif p.category == "جملة الجملة":
+        print("Bulk Bulk")
+        revenue = product.bulk_bulk_expense
+      elif p.category == "جملة":
+        print("Bulk")
+        revenue = product.bulk_expense
+      else:
+        print("INOVICE TYPE IS NON OF THE ABOVE")  
+
+      print(paid)
+      revenue = revenue * qunatity
+      print(revenue)
+      revenue = paid - revenue
+      print(revenue)
+      revenue_total += revenue
+      print(paid)
+      print(revenue)
+      print(revenue_total)
+      revenue_account = Account.query.filter_by(id=3).first()
+      revenue_account.balance = revenue_account.balance - revenue_total  
 
       db.session.commit()
       now = datetime.now()
@@ -988,7 +1144,10 @@ def invoice(invoice_id):
     #temp = [key,value]
     #list_of_items.append(temp)
   #print("CART CONTENT: ")
-  #print(list_of_items)  
+  #print(list_of_items)
+  revenue_total = 0
+  revenue = 0  
+  paid = 0
   p = Inv.query.filter_by(id=invoice_id).first()
   if p.is_expense:
     dr = DebitTransaction.query.filter_by(invoice_id=invoice_id).first()
@@ -1012,8 +1171,46 @@ def invoice(invoice_id):
   for key, value in list1.items():
     temp = [key,value]
     list_of_items.append(temp)
+  print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")  
+  print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+  print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+  print(p.category)
+  for item in list_of_items: 
+    print(item)
+    print(item[0])
+    print(item[1])
+    print(item[1][0])
+    print(item[1][1])
+
+    product = Product.query.filter_by(name=item[0]).first()
+    paid = item[1][0] * item[1][1]
+    if p.category == "تجزئة":
+      print("Single")
+      revenue = product.single_expense
+    elif p.category == "جملة الجملة":
+      print("Bulk Bulk")
+      revenue = product.bulk_bulk_expense
+    elif p.category == "جملة":
+      print("Bulk")
+      revenue = product.bulk_expense
+    else:
+      print("INOVICE TYPE IS NON OF THE ABOVE")  
+
+    print(paid)
+    revenue = revenue * item[1][1]
+    print(revenue)
+    revenue = paid - revenue
+    print(revenue)
+    revenue_total += revenue
+    print(paid)
+    print(revenue)
+    print(revenue_total)
   account = Account.query.filter_by(id=1).first()
   vat_account = Account.query.filter_by(id=2).first()
+  revenue_account = Account.query.filter_by(id=3).first()
+  if p.inv_type != "Loan":
+    revenue_account.balance = revenue_account.balance + revenue_total
+    db.session.commit()
   print("Current balance before update is ... +++++++++++++++++++++++++++++")
   print(account.balance)
   now = datetime.now()
@@ -1123,7 +1320,52 @@ def sadadLoans(invoice_id):
     account.balance = account.balance + sadad_amount
     invoices.remaining_balance = invoices.remaining_balance -  (sadad_amount + vat)
     db.session.commit()
+    y = json.loads(invoices.products)
+    if invoices.remaining_balance == 0:
+      list_of_items = []
+      for key, value in y.items():
+        #temp = [key]
+        temp = [key,value]
+        list_of_items.append(temp)
+      paid = 0
+      revenue = 0
+      revenue_total = 0       
+      for item in list_of_items: 
+        print(item)
+        print(item[0])
+        print(item[1])
+        print(item[1][0])
+        print(item[1][1])
 
+        product = Product.query.filter_by(name=item[0]).first()
+        paid = item[1][0] * item[1][1]
+        if invoices.category == "تجزئة":
+          print("Single")
+          revenue = product.single_expense
+        elif invoices.category == "جملة الجملة":
+          print("Bulk Bulk")
+          revenue = product.bulk_bulk_expense
+        elif invoices.category == "جملة":
+          print("Bulk")
+          revenue = product.bulk_expense
+        else:
+          print("INOVICE TYPE IS NON OF THE ABOVE")  
+
+        print(paid)
+        revenue = revenue * item[1][1]
+        print(revenue)
+        revenue = paid - revenue
+        print(revenue)
+        revenue_total += revenue
+        print(paid)
+        print(revenue)
+        print(revenue_total)
+      revenue_account = Account.query.filter_by(id=3).first()
+      revenue_account.balance = revenue_account.balance + revenue_total  
+      print("Purchased products as a list: ")
+      print(list_of_items)
+
+      db.session.commit() 
     now = datetime.now()
     cr = CreditTransaction(t_type="CR", total=float(sadad_amount), date=now, description="تسديد ذمة", invoice_id=invoice_id, current_balance = account.balance)
     dr = DebitTransaction(t_type="DR", total=float(vat), date=now, description="نقل مبلغ الضريبة لحساب الضريبة", invoice_id=invoice_id, current_balance = account.balance)
@@ -1196,7 +1438,7 @@ def sellBranchOneCash():
   for key, value in list1.items():
     temp = [key,value]
     list_of_items.append(temp)
-  return render_template('sell-branch-1-cash.html', form=form, products = list_of_items, length = len(list_of_items),user=u);
+  return render_template('sell-branch-1-cash.html', form=form, products = list1.items(), length = len(list_of_items),user=u);
   #return render_template('sell-branch-1-cash.html', form=form, products=products, length=length)
 
 @app.route("/sell-branch-1-loan.html")
@@ -1473,6 +1715,29 @@ def reCalculateInvoice(id):
     return 0
 
 
+def setRevenue(id, name, price, quantity, old_price, old_quantity):
+  print("Inside setRevenue() func.... ")
+  p= Inv.query.filter_by(id=id).first()
+  product = Product.query.filter_by(name=name).first()
+  expense = 0
+  revenue = 0
+  if p.category == "تجزئة":
+    print("Single")
+    expense = product.single_expense
+  elif p.category == "جملة الجملة":
+    print("Bulk Bulk")
+    expense = product.bulk_bulk_expense
+  elif p.category == "جملة":
+    print("Bulk")
+    expense = product.bulk_expense
+  else:
+    print("INOVICE TYPE IS NON OF THE ABOVE")  
+  quantity_difference = abs(old_quantity - quantity)
+  price_minus_expense = abs(price-expense)
+  revenue = quantity_difference * price_minus_expense
+  revenue_account = Account.query.filter_by(id=3).first()
+  revenue_account.balance = revenue_account.balance + revenue  
+  db.session.commit()  
 
 def amendChangestoInv(id, name, price, quantity):
     now = datetime.now()
@@ -1489,6 +1754,20 @@ def amendChangestoInv(id, name, price, quantity):
     ################################################
     final_price = 0
     final_quantity = 0
+    print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    print("Registered price and quantity")
+    print(y[name][0])
+    print(y[name][1])
+    print("The new price and quantity values")
+    print(price)
+    print(quantity)
+    print("Invoice category: ")
+    print(inv.category)
+    print("Invoice type: ")
+    print(inv.inv_type)
+    print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    if inv.inv_type != "Loan":
+      setRevenue(id,name,price,quantity,y[name][0],y[name][1])
     # y[name][0] is the registered price
     # y[name][1] is the registered quantity
     if quantity > y[name][1]:
@@ -1553,6 +1832,10 @@ def amendChangestoInv(id, name, price, quantity):
     print("Total price and quantity: ")
     print(final_price)
     print(final_quantity)
+    print("Old price and quantity")
+    print(y[name])
+    print(y[name][0])
+    print(y[name][1])
     print("## End of Changes ##")
     ################################################
     y[name][0] = price
@@ -1978,8 +2261,27 @@ def sellBranchOneLoanDB1():
     print(invvv[0].products)
     return redirect(url_for('invoice', invoice_id=inv.id))  
   else:
-    return "Finished"
-  return "Finished"       
+    list1 = session.get('cart')
+    list_of_items = []
+    print(list1)
+    for key, value in list1.items():
+      temp = [key,value]
+      list_of_items.append(temp)   
+    print("CART CONTENT")
+    print(list_of_items)  
+    return render_template('sell-branch-1-loan.html', form=form, products = list_of_items, length = len(list_of_items), user=u);  
+    #return "Finished"
+
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-1-loan.html', form=form, products = list_of_items, length = len(list_of_items), user=u);  
+  #return "Finished"       
 
 
 
@@ -2235,8 +2537,27 @@ def sellBranchTwoLoanDB1():
     print(invvv[0].products)
     return redirect(url_for('invoice', invoice_id=inv.id))  
   else:
-    return "Finished"
-  return "Finished"       
+    list1 = session.get('cart')
+    list_of_items = []
+    print(list1)
+    for key, value in list1.items():
+      temp = [key,value]
+      list_of_items.append(temp)   
+    print("CART CONTENT")
+    print(list_of_items)  
+    return render_template('sell-branch-2-loan.html', form=form, products = list_of_items, length = len(list_of_items), user=u);    
+    #return "Finished"
+
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-2-loan.html', form=form, products = list_of_items, length = len(list_of_items), user=u);    
+  #return "Finished"       
 
 
 @app.route("/sell-branch-1-loan-to-dbb.html", methods=['GET', 'POST'])
@@ -2620,18 +2941,24 @@ def sellBranchOneCashDB():
     invoice_category = ""
     invoice_category_arabic = ""
     requested_price = 0
-    if request.form.get('inv_category') == "جملة ":
+    if request.form.get('inv_category') == "جملة " or request.form.get('inv_category')  == "Bulk":
+      print("Inside bulk")
       invoice_category = "bulk_price"
       invoice_category_arabic = "جملة "
       requested_price = branchProduct.bulk_price
-    elif request.form.get('inv_category') == "جملة  الجملة ":
+    elif request.form.get('inv_category') == "جملة  الجملة " or request.form.get('inv_category')  == "Bulk Bulk":
+      print("Inside bulk bulk")
       invoice_category = "bulk_bulk_price"
       invoice_category_arabic = "جملة  الجملة "
       requested_price = branchProduct.bulk_bulk_price
-    elif request.form.get('inv_category') == "تجزئة ":
+    elif request.form.get('inv_category') == "تجزئة " or request.form.get('inv_category')  == "Single":
+      print("Inside single")
       invoice_category = "single_price"
       invoice_category_arabic = "تجزئة "
       requested_price = branchProduct.single_price
+    else:
+      print("Inside Non of them")  
+
     print("INVOICE CATEGORY: ")
     print(invoice_category)
     print("REQUESTED PRICE")
@@ -2704,7 +3031,16 @@ def sellBranchOneCashDB():
     return redirect(url_for('invoice', invoice_id=inv.id))
     #return render_template('invoice.html',products=list_of_items, length = len(list_of_items))
 
-  return "okie dokie"
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-1-cash.html', form=form, products = list_of_items, length = len(list_of_items), user=u);
+  #return "okie dokie"
   
 
 
@@ -2926,7 +3262,16 @@ def sellBranchTwoCashDB():
     return redirect(url_for('invoice', invoice_id=inv.id))
     #return render_template('invoice.html',products=list_of_items, length = len(list_of_items))
 
-  return "okie dokie"
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-2-cash.html', form=form, products = list_of_items, length = len(list_of_items), user=u);
+  #return "okie dokie"
   
 
 
@@ -3154,7 +3499,16 @@ def sellBranchTwoCardDB():
     return redirect(url_for('invoice', invoice_id=inv.id))
     #return render_template('invoice.html',products=list_of_items, length = len(list_of_items))
 
-  return "okie dokie"
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-2-card.html', form=form, products = list_of_items, length = len(list_of_items), user=u);
+  #return "okie dokie"
   
 
 
@@ -3378,7 +3732,17 @@ def sellBranchOneCardDB():
     return redirect(url_for('invoice', invoice_id=inv.id))
     #return render_template('invoice.html',products=list_of_items, length = len(list_of_items))
 
-  return "okie dokie"
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-1-card.html', form=form, products = list_of_items, length = len(list_of_items), user=u);
+  #return "okie dokie"
+  
   
 
 
@@ -3603,7 +3967,17 @@ def sellBranchTwoKabsDB():
     return redirect(url_for('invoice', invoice_id=inv.id))
     #return render_template('invoice.html',products=list_of_items, length = len(list_of_items))
 
-  return "okie dokie"
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-2-kabs.html', form=form, products = list_of_items, length = len(list_of_items), user=u);
+  #return "okie dokie"
+  
 
 
 
@@ -3745,15 +4119,21 @@ def sellBranchOneKabsDB():
     invoice_category = ""
     invoice_category_arabic = ""
     requested_price = 0
+    print(request.form.get('inv_category') == "تجزئة")
+    print(request.form.get('inv_category') == "جملة  الجملة ")
+    print(request.form.get('inv_category') == "جملة ")
     if request.form.get('inv_category') == "جملة ":
+      print("Inside bulk")
       invoice_category = "bulk_price"
       invoice_category_arabic = "جملة "
       requested_price = branchProduct.bulk_price
     elif request.form.get('inv_category') == "جملة  الجملة ":
+      print("Inside Bulk Bulk")
       invoice_category = "bulk_bulk_price"
       invoice_category_arabic = "جملة  الجملة "
       requested_price = branchProduct.bulk_bulk_price
-    elif request.form.get('inv_category') == "تجزئة ":
+    elif request.form.get('inv_category') == "تجزئة":
+      print("Inside Single")
       invoice_category = "single_price"
       invoice_category_arabic = "تجزئة "
       requested_price = branchProduct.single_price
@@ -3829,7 +4209,16 @@ def sellBranchOneKabsDB():
     return redirect(url_for('invoice', invoice_id=inv.id))
     #return render_template('invoice.html',products=list_of_items, length = len(list_of_items))
 
-  return "okie dokie"
+  list1 = session.get('cart')
+  list_of_items = []
+  print(list1)
+  for key, value in list1.items():
+    temp = [key,value]
+    list_of_items.append(temp)   
+  print("CART CONTENT")
+  print(list_of_items)  
+  return render_template('sell-branch-1-kabs.html', form=form, products = list_of_items, length = len(list_of_items), user=u);
+  #return "okie dokie"
 
 
 
@@ -3995,10 +4384,14 @@ def addProductsToDB():
     print(form.name.data)
     print(form.shelf.data)
     print(form.quantity.data)
+    print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    print(form.single_expense.data)
+    print(form.bulk_bulk_expense.data)
+    print(form.bulk_expense.data)
     #print(form.price.data)
-    product = Product(name=form.name.data, bulk_price=form.bulk_price.data, bulk_bulk_price=form.bulk_bulk_price.data, single_price=form.single_price.data, shelf=form.shelf.data, quantity=form.quantity.data)
-    productb1 = BranchOneProduct(name=form.name.data, bulk_price=form.bulk_price.data, bulk_bulk_price=form.bulk_bulk_price.data, single_price=form.single_price.data,shelf=form.shelf.data, quantity=0)
-    productb2 = BranchTwoProduct(name=form.name.data, bulk_price=form.bulk_price.data, bulk_bulk_price=form.bulk_bulk_price.data, single_price=form.single_price.data,shelf=form.shelf.data, quantity=0)
+    product = Product(name=form.name.data, bulk_price=form.bulk_price.data, bulk_bulk_price=form.bulk_bulk_price.data, single_price=form.single_price.data, single_expense= form.single_expense.data, bulk_bulk_expense = form.bulk_bulk_expense.data, bulk_expense = form.bulk_expense.data, shelf=form.shelf.data, quantity=form.quantity.data)
+    productb1 = BranchOneProduct(name=form.name.data, bulk_price=form.bulk_price.data, bulk_bulk_price=form.bulk_bulk_price.data, single_price=form.single_price.data, single_expense= form.single_expense.data, bulk_bulk_expense = form.bulk_bulk_expense.data, bulk_expense = form.bulk_expense.data, shelf=form.shelf.data, quantity=0)
+    productb2 = BranchTwoProduct(name=form.name.data, bulk_price=form.bulk_price.data, bulk_bulk_price=form.bulk_bulk_price.data, single_price=form.single_price.data, single_expense= form.single_expense.data, bulk_bulk_expense = form.bulk_bulk_expense.data, bulk_expense = form.bulk_expense.data, shelf=form.shelf.data, quantity=0)
 
     db.session.add(product)
     db.session.add(productb1)
@@ -4089,6 +4482,28 @@ def page(product_id):
     # You might want to return some sort of response...
 
 """
+
+@app.route("/delete-product/<product_name>", methods=['GET', 'POST'])
+@login_required
+def deleteProduct(product_name):
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  print("The product name to be deleted is: ")
+  print(product_name)
+  list1 = session.get('cart')
+  list1.pop(product_name)
+  session['cart'] = list1
+  print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+  redirect_to = request.referrer
+  print("Previous Link: ")
+  print(redirect_to)
+  print(":>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:>:")
+  return redirect(redirect_to)
+  #return "Page will be implemented"
+
+
 @app.route("/amend-product/<product_id>", methods=['GET', 'POST'])
 @login_required
 def amendProduct(product_id):
@@ -4114,6 +4529,9 @@ def amendProduct(product_id):
     p.bulk_price = form.bulk_price.data
     p.bulk_bulk_price = form.bulk_bulk_price.data
     p.single_price = form.single_price.data
+    p.single_expense = form.single_expense.data
+    p.bulk_bulk_expense = form.bulk_bulk_expense.data
+    p.bulk_expense = form.bulk_expense.data
     p.shelf = form.shelf.data 
     p.quantity = form.quantity.data
     db.session.commit()
@@ -4126,6 +4544,9 @@ def amendProduct(product_id):
     pb1.bulk_price = form.bulk_price.data
     pb1.bulk_bulk_price = form.bulk_bulk_price.data
     pb1.single_price = form.single_price.data
+    pb1.single_expense = form.single_expense.data
+    pb1.bulk_bulk_expense = form.bulk_bulk_expense.data
+    pb1.bulk_expense = form.bulk_expense.data
     db.session.commit()
     print("Price after commit: ")
     print(pb1.bulk_price)
@@ -4134,6 +4555,9 @@ def amendProduct(product_id):
     pb2.bulk_price = int(form.bulk_price.data)
     pb2.bulk_bulk_price = int(form.bulk_bulk_price.data)
     pb2.single_price = int(form.single_price.data)
+    pb2.single_expense = form.single_expense.data
+    pb2.bulk_bulk_expense = form.bulk_bulk_expense.data
+    pb2.bulk_expense = form.bulk_expense.data
     db.session.commit()
 
     print(p.name)
@@ -4144,6 +4568,11 @@ def amendProduct(product_id):
     form.single_price.data = p.single_price
     form.shelf.data = p.shelf
     form.quantity.data = p.quantity
+    form.bulk_expense.data = p.bulk_expense
+    form.bulk_bulk_expense.data = p.bulk_bulk_expense
+    form.single_expense.data = p.single_expense
+
+
     flash(u'تم تعديل معلومات الصنف', 'success')
     return render_template('amend-product.html', form=form, product_id= product_id, user=u)
   form.id_number.data = product_id
@@ -4153,6 +4582,9 @@ def amendProduct(product_id):
   form.single_price.data = p.single_price
   form.shelf.data = p.shelf
   form.quantity.data = p.quantity
+  form.bulk_expense.data = p.bulk_expense
+  form.bulk_bulk_expense.data = p.bulk_bulk_expense
+  form.single_expense.data = p.single_expense
 
   return render_template('amend-product.html', form=form, product_id= product_id, user=u)        
 
@@ -4192,6 +4624,14 @@ def viewCustomers():
   print(len(customers))
   return render_template('view-customers.html', customers=customers, len=len(customers), user=u)    
 
+
+def queryset_to_dict(query_result):
+   query_columns = query_result[0].keys()
+   res = [list(ele) for ele in query_result]
+   dict_list = [dict(zip(query_columns, l)) for l in res]
+   return dict_list
+
+
 @app.route("/branch1products.html")
 @login_required
 def tablesB1():
@@ -4200,9 +4640,16 @@ def tablesB1():
   print(my_user)
   u = User.query.filter_by(id=my_user).first()
   products = BranchOneProduct.query.all()
-  print(products)
+  #products2 = BranchOneProduct.query.join(Product, BranchOneProduct.name==Product.name).first()
+  products2 = db.session.query(BranchOneProduct, Product).join(Product, (BranchOneProduct.name==Product.name)).all()
+
+  print("After Join")
+  print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+  print(products2[0].Product.quantity)
+  #invoices = Inv.query.filter_by(initiator="Branch1").join(Customer, Inv.customer_id==Customer.id).order_by(Inv.date).all()
+  #print(products)
   print(len(products))
-  return render_template('branch1products.html', products=products, len=len(products),user=u) 
+  return render_template('branch1products.html', products=products2, len=len(products2),user=u) 
 
 @app.route("/branch2products.html")
 @login_required
@@ -4212,9 +4659,10 @@ def tablesB2():
   print(my_user)
   u = User.query.filter_by(id=my_user).first()
   products = BranchTwoProduct.query.all()
+  products2 = db.session.query(BranchTwoProduct, Product).join(Product, (BranchTwoProduct.name==Product.name)).all()
   print(products)
   print(len(products))
-  return render_template('branch2products.html', products=products, len=len(products), user=u)     
+  return render_template('branch2products.html', products=products2, len=len(products2), user=u)     
 
 
 

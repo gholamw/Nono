@@ -24,6 +24,19 @@ from flask_login import login_user, logout_user, current_user, login_required, L
 #    mailing_list_id = db.Column( db.Integer, db.ForeignKey('mailing_list.id'), primary_key=True)
 #    user = db.relationship("User")
 
+def to_dict(obj, with_relationships=True):
+    d = {}
+    for column in obj.__table__.columns:
+        if with_relationships and len(column.foreign_keys) > 0:
+             # Skip foreign keys
+            continue
+        d[column.name] = getattr(obj, column.name)
+
+    if with_relationships:
+        for relationship in inspect(type(obj)).relationships:
+            val = getattr(obj, relationship.key)
+            d[relationship.key] = to_dict(val) if val else None
+    return d
 
 
 class User(db.Model):
@@ -86,6 +99,9 @@ class Product(db.Model):
     bulk_price = db.Column(db.Float)
     bulk_bulk_price = db.Column(db.Float)
     single_price = db.Column(db.Float)
+    single_expense = db.Column(db.Float)
+    bulk_bulk_expense = db.Column(db.Float)
+    bulk_expense = db.Column(db.Float)
     shelf = db.Column(db.String(64))
     quantity = db.Column(db.Integer)
     invoices = db.relationship("Invoice",
@@ -170,6 +186,9 @@ class BranchOneProduct(db.Model):
     bulk_price = db.Column(db.Float)
     bulk_bulk_price = db.Column(db.Float)
     single_price = db.Column(db.Float)
+    single_expense = db.Column(db.Float)
+    bulk_bulk_expense = db.Column(db.Float)
+    bulk_expense = db.Column(db.Float)
     shelf = db.Column(db.String(64))
     quantity = db.Column(db.Integer) 
 
@@ -180,6 +199,9 @@ class BranchTwoProduct(db.Model):
     bulk_price = db.Column(db.Float)
     bulk_bulk_price = db.Column(db.Float)
     single_price = db.Column(db.Float)
+    single_expense = db.Column(db.Float)
+    bulk_bulk_expense = db.Column(db.Float)
+    bulk_expense = db.Column(db.Float)
     shelf = db.Column(db.String(64))
     quantity = db.Column(db.Integer)
 
@@ -270,7 +292,14 @@ class Customer(db.Model):
     #invoices = db.relationship("Inv", back_populates="customer")
     invoices = db.relationship('Inv', backref='customer', lazy=True)
 
-    
+
+class Procurement(db.Model):
+    __tablename__ = "procurement"
+    id = db.Column(db.Integer, primary_key=True)
+    customer_name = db.Column(db.String(64), index=True,unique=True)
+    description = db.Column(db.String(64), index=True,unique=True)
+    amount = db.Column(db.Float)
+    #invoices = db.relationship("Inv", back_populates="customer")    
 
 def init_db():
     print("Initializing DB")

@@ -35,10 +35,17 @@ class InlineSubmitField(BooleanField):
 
 
 
-myChoices = ["Branch 1", "Branch 2"]
-invoiceCategories = ["جملة ", "جملة  الجملة ", "تجزئة "]
-invoiceType = ["نقد"]
-transactionType = ["خصم"]
+#myChoices = ["Branch 1", "Branch 2"]
+myChoices = [('Branch 1','Branch 1'), ('Branch 2','Branch 2')]
+
+#invoiceCategories = ["single"]
+#invoiceCategories = ["جملة ", "جملة  الجملة ", "تجزئة "]
+#invoiceCategories =[('aim', 'AIM'), ('msn', 'MSN')]
+#invoiceCategories =[('', ''), ('', ''), ('', '')]
+invoiceCategories =[('تجزئة', 'تجزئة'), ('جملة الجملة', 'جملة الجملة'), ('جملة', 'جملة')]
+
+invoiceType = [('نقد', 'نقد')]
+transactionType = [('خصم','خصم')]
 #invoiceType = ["نقد", "دين"]
 #transactionType = ["خصم" , "ايداع"]
 
@@ -52,6 +59,9 @@ class AddProductForm(Form):
 	bulk_price = DecimalField('سعر الجملة:', validators=[DataRequired()])
 	bulk_bulk_price = DecimalField('سعر جملة الجملة:', validators=[DataRequired()])
 	single_price = DecimalField('سعر التجزئة:', validators=[DataRequired()])
+	single_expense = DecimalField('تكلفة الصنف التجزئة', validators=[DataRequired()])
+	bulk_bulk_expense = DecimalField('تكلفة الصنف جملة الجملة', validators=[DataRequired()])
+	bulk_expense = DecimalField('تكلفة الصنف الجملة', validators=[DataRequired()])
 	shelf = StringField('رقم الدرج:', validators=[DataRequired()])
 	quantity = IntegerField('كمية الصنف:', validators=[DataRequired()])
 	submit = SubmitField('اضافة الصنف')
@@ -59,7 +69,7 @@ class AddProductForm(Form):
 class AddCustomerForm(Form):
 	name = StringField('اسم العميل:', validators=[DataRequired()])
 	mobile = StringField('رقم الجوال:', validators=[DataRequired()])
-	submit = SubmitField('اضافة العميل')	
+	submit = SubmitField('اضافة العميل')
 
 class AmendProductForm(Form):
 	id_number = HiddenField('ID:', validators=[DataRequired()])
@@ -67,9 +77,12 @@ class AmendProductForm(Form):
 	bulk_price = DecimalField('سعر الجملة:', validators=[DataRequired()])
 	bulk_bulk_price = DecimalField('سعر جملة الجملة:', validators=[DataRequired()])
 	single_price = DecimalField('سعر التجزئة:', validators=[DataRequired()])
+	single_expense = DecimalField('تكلفة الصنف التجزئة', validators=[DataRequired()])
+	bulk_bulk_expense = DecimalField('تكلفة الصنف جملة الجملة', validators=[DataRequired()])
+	bulk_expense = DecimalField('تكلفة الصنف الجملة', validators=[DataRequired()])
 	shelf = StringField('Product Shelf:', validators=[DataRequired()])
 	quantity = IntegerField('كمية الصنف', validators=[DataRequired()])
-	submit = SubmitField('تعديل الصنف')	
+	submit = SubmitField('تعديل الصنف')
 
 
 class SearchForm(Form):
@@ -102,7 +115,7 @@ class MoveStock(Form):
 	autocomp = TextField('اختر الصنف', id='autocomplete')
 	checking = TextField('كمية الصنف المتاحة:', validators=[DataRequired()])
 	branch = SelectField(u'اختر الفرع', choices = myChoices)
-	number = TextField('الكمية المتاحة:', validators=[DataRequired()])	
+	number = TextField('الكمية المتاحة:', validators=[DataRequired()])
 	check = SubmitField('الكمية المتوفر')
 	submit = SubmitField('تاكيد المناقلة')
 
@@ -111,7 +124,7 @@ class Sadad(Form):
 	invoice_id = TextField('رقم الفاتورة', id='autocomplete')
 	remianing_balance = DecimalField('المبلغ المتبقي للسداد:', validators=[DataRequired()])
 	pay_amount = DecimalField('مبلغ السداد:', validators=[DataRequired()])
-	submit = SubmitField('تاكيد السداد')	
+	submit = SubmitField('تاكيد السداد')
 
 def my_length_check(form, field):
     print("INSIDE VALIDATION CHECK")
@@ -129,7 +142,7 @@ class CreateUser(Form):
 	branch1 = BooleanField('الفرع الاول', validators=[DataRequired(), ])
 	branch2 = BooleanField('الفرع الثاني', validators=[DataRequired(), ])
 
-	submit = SubmitField('اضافة مستخدم جديد')		
+	submit = SubmitField('اضافة مستخدم جديد')
 
 class EditVAT(Form):
 	percentage = DecimalField('قيمة الضريبة المضافة:', validators=[DataRequired()])
@@ -138,15 +151,24 @@ class EditVAT(Form):
 class Spendings(Form):
 	invoice_type = SelectField(u'اختر نوع الفاتورة', choices = invoiceType) # Cash, Loan
 	transaction_type = SelectField(u'اختر نوع العملية', choices = transactionType) # DR, CR
-	description = StringField('وصف العملية', validators=[InputRequired(),my_length_check])			
+	description = StringField('وصف العملية', validators=[InputRequired(),my_length_check])
 	pay_amount = DecimalField('المبلغ', validators=[DataRequired()])
 	submit = SubmitField('انشاء العملية ')
+
+class Procurement(Form):
+	autocompcustomer = TextField('اختر عميل', id='autocompletecustomer')
+	description = StringField('وصف العملية', validators=[InputRequired(),my_length_check])
+	pay_amount = DecimalField('المبلغ', validators=[DataRequired()])
+	submit = SubmitField('انشاء العملية ')
+	invoices = 	SubmitField('اختيار الفواتير')
+	invoices_to_choose = SelectField(u'اختر الفواتير', choices=[])
+
 
 class Refund(Form):
 	refund_type = RadioField('نوع الاسترجاع', choices=[('Full','استرجاع كامل الفاتورة'),('Partial','استرجاع جزء من مبلغ الفاتورة')])
 	refund_products = SelectField(u'Select Refund Product', choices=[])
 	refund_amount = DecimalField('الكمية المراد استرجاعها', validators=[DataRequired()])
-	submit = SubmitField('تنفيذ امر استرجاع المبلغ للعميل')	
+	submit = SubmitField('تنفيذ امر استرجاع المبلغ للعميل')
 
 class RevenueAccount(Form):
 		balance = DecimalField('الرصيد الحالي', validators=[DataRequired()])
