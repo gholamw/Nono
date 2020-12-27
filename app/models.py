@@ -106,11 +106,14 @@ class Product(db.Model):
     quantity = db.Column(db.Integer)
     invoices = db.relationship("Invoice",
                                secondary=invoice_identifier)
-    def __init__(self,name,bulk_price,bulk_bulk_price,single_price, shelf, quantity,invoices = []):
+    def __init__(self,name,bulk_price,bulk_bulk_price,single_price, single_expense, bulk_bulk_expense, bulk_expense, shelf, quantity,invoices = []):
         self.name = name
         self.bulk_price = bulk_price
         self.bulk_bulk_price = bulk_bulk_price
         self.single_price = single_price
+        self.single_expense = single_expense
+        self.bulk_bulk_expense = bulk_bulk_expense
+        self.bulk_expense = bulk_expense
         self.shelf = shelf
         self.quantity = quantity
         self.invoices = invoices

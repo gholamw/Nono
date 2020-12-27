@@ -37,12 +37,13 @@ class InlineSubmitField(BooleanField):
 
 #myChoices = ["Branch 1", "Branch 2"]
 myChoices = [('Branch 1','Branch 1'), ('Branch 2','Branch 2')]
+myChoices1 = [('فرع كيلو 8','فرع كيلو 8'), ('فرع الجوهرة','فرع الجوهرة')]
 
 #invoiceCategories = ["single"]
 #invoiceCategories = ["جملة ", "جملة  الجملة ", "تجزئة "]
 #invoiceCategories =[('aim', 'AIM'), ('msn', 'MSN')]
 #invoiceCategories =[('', ''), ('', ''), ('', '')]
-invoiceCategories =[('تجزئة', 'تجزئة'), ('جملة الجملة', 'جملة الجملة'), ('جملة', 'جملة')]
+invoiceCategories =[('Single', 'Single'), ('Bulk', 'Bulk'), ('Bulk Bulk', 'Bulk Bulk')]
 
 invoiceType = [('نقد', 'نقد')]
 transactionType = [('خصم','خصم')]
@@ -118,6 +119,22 @@ class MoveStock(Form):
 	number = TextField('الكمية المتاحة:', validators=[DataRequired()])
 	check = SubmitField('الكمية المتوفر')
 	submit = SubmitField('تاكيد المناقلة')
+
+
+class MoveStockAdmin(Form):
+	autocomp = TextField('اختار الدرج', id='autocomplete')
+	branch = SelectField(u'اختر الفرع', choices = myChoices1)
+	quantity = IntegerField('كمية الصنف:', validators=[DataRequired()])
+	submit = SubmitField('تاكيد المناقلة')
+
+
+class MoveStockAdminShelf(Form):
+	autocomp = TextField('ادخل رقم الدرج', id='autocomplete')
+	branch = SelectField(u'اختر الفرع', choices = myChoices1)
+	products = SelectField(u'اختر الصنف', choices = {})
+	quantity = IntegerField('كمية الصنف:', validators=[DataRequired()])
+	submit = SubmitField('تاكيد المناقلة')
+	check = SubmitField('عرض الاصناف')
 
 
 class Sadad(Form):

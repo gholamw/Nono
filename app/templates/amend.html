@@ -37,7 +37,7 @@
   <!-- Page Wrapper -->
   <div id="wrapper">
 
-    <!-- Sidebar -->
+      <!-- Sidebar -->
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
@@ -67,26 +67,6 @@
       </div>
 
 
-            <!-- Nav Item - Utilities Collapse Menu -->
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities1" aria-expanded="true" aria-controls="collapseUtilities1">
-          <i class="fas fa-fw fa-wrench"></i>
-          <span>Admin</span>
-        </a>
-        <div id="collapseUtilities1" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Admin Components:</h6>
-            <a class="collapse-item" href="utilities-color.html">Add Products</a>
-            <a class="collapse-item" href="utilities-other.html">Amend Products</a>
-            <a class="collapse-item" href="utilities-other.html">View Products</a>
-            <a class="collapse-item" href="utilities-border.html">Change TAX rate</a>
-            <a class="collapse-item" href="utilities-border.html">Procurement</a>
-            <a class="collapse-item" href="utilities-border.html">Spendings</a>
-            <a class="collapse-item" href="/statement">Statement</a>
-          </div>
-        </div>
-      </li>
-
     <!-- Nav Item - Utilities Collapse Menu -->
       {% if user.admin %}      
       <li class="nav-item">
@@ -110,7 +90,15 @@
             <a class="collapse-item" href="/users">المستخدمين</a>
             <a class="collapse-item" href="/current-balance">الرصيد الحالي</a>
             <a class="collapse-item" href="/vat-balance">الرصيد الضريبي الحالي</a>
+            <a class="collapse-item" href="/current-revenue">الربح الحالي</a>
             <a class="collapse-item" href="/view-invoices-admin">عرض الفواتير</a>
+            <a class="collapse-item" href="/procurement">شراء من عملائنا</a>
+            <a class="collapse-item" href="/customer-statement">كشف حساب العملاْ|</a>
+            <a class="collapse-item" href="/admin-product-movement">تعيين كميات الاصناف</a>
+            <a class="collapse-item" href="/admin-product-movement-shelf">تعيين الاصناف بارقام الادراج</a>
+
+
+
 
 
             
@@ -134,6 +122,8 @@
             <a class="collapse-item" href="/search">المصاريف</a>
             <a class="collapse-item" href="tables.html">مخزون الاصناف</a>
             <a class="collapse-item" href="/spendings">المصاريف</a>
+            <a class="collapse-item" href="/add-customers">اضافة العملاء</a>
+
 
           </div>
         </div>
@@ -145,7 +135,7 @@
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
           <i class="fas fa-fw fa-cog"></i>
-          <span>فرع رقم 1</span>
+          <span>فرع كيلو 8</span>
         </a>
         <div id="collapseThree" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
@@ -155,6 +145,8 @@
             <a class="collapse-item" href="/view-invoices">معاينة الفواتير</a>
             <a class="collapse-item" href="branch1products.html">مخزون الاصناف</a>
             <a class="collapse-item" href="/spendings">المصاريف</a>
+            <a class="collapse-item" href="/add-customers">اضافة العملاء</a>
+
 
           </div>
         </div>
@@ -165,64 +157,24 @@
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
           <i class="fas fa-fw fa-cog"></i>
-          <span>فرع رقم 2</span>
+          <span>فرع الجوهرة</span>
         </a>
         <div id="collapseFour" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Branch 2 Components:</h6>
             <a class="collapse-item" href="/sell-branch-2.html">بيع</a>
-            <a class="collapse-item" href="/search">المصاريف</a>
+            <a class="collapse-item" href="/spendings">المصاريف</a>
             <a class="collapse-item" href="/view-invoices">معاينة الفواتير</a>
             <a class="collapse-item" href="branch2products.html">مخزون الاصناف</a>
             <a class="collapse-item" href="/spendings">المصاريف</a>
+            <a class="collapse-item" href="/add-customers">اضافة العملاء</a>
+
 
           </div>
         </div>
       </li>
 {% endif %}
 
-
-      <!-- Divider -->
-      <hr class="sidebar-divider">
-
-      <!-- Heading -->
-      <div class="sidebar-heading">
-        Addons
-      </div>
-
-      <!-- Nav Item - Pages Collapse Menu -->
-      <li class="nav-item active">
-        <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true" aria-controls="collapsePages">
-          <i class="fas fa-fw fa-folder"></i>
-          <span>Pages</span>
-        </a>
-        <div id="collapsePages" class="collapse show" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Login Screens:</h6>
-            <a class="collapse-item" href="login.html">Login</a>
-            <a class="collapse-item" href="register.html">Register</a>
-            <a class="collapse-item" href="forgot-password.html">Forgot Password</a>
-            <div class="collapse-divider"></div>
-            <h6 class="collapse-header">Other Pages:</h6>
-            <a class="collapse-item" href="404.html">404 Page</a>
-            <a class="collapse-item active" href="blank.html">Blank Page</a>
-          </div>
-        </div>
-      </li>
-
-      <!-- Nav Item - Charts -->
-      <li class="nav-item">
-        <a class="nav-link" href="charts.html">
-          <i class="fas fa-fw fa-chart-area"></i>
-          <span>Charts</span></a>
-      </li>
-
-      <!-- Nav Item - Tables -->
-      <li class="nav-item">
-        <a class="nav-link" href="tables.html">
-          <i class="fas fa-fw fa-table"></i>
-          <span>Tables</span></a>
-      </li>
 
       <!-- Divider -->
       <hr class="sidebar-divider d-none d-md-block">
