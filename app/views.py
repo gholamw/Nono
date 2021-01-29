@@ -3,9 +3,9 @@ from flask_login import login_user, logout_user, current_user, login_required, L
 from app import app, lm, db
 #from app.menu_views import *
 from flask import g,render_template, flash, redirect, session, Flask, url_for, request, jsonify
-from .forms import LoginForm, AddProductForm, AmendProductForm, SearchForm, SellCash, MoveStock, AddCustomerForm, SellLoan, Sadad, CreateUser, EditVAT, Refund, Spendings,RevenueAccount, VATAccount,Procurement, MoveStockAdmin, MoveStockAdminShelf
-from .models import User, BranchOneProduct, BranchTwoProduct, CreditTransaction, DebitTransaction, Invoice, Product, Transaction, Inv, Account, VAT, Customer
-from flask_table import Table, Col, LinkCol
+from .forms import LoginForm, AddProductForm, AmendProductForm, SearchForm, SellCash, MoveStock, AddCustomerForm, SellLoan, Sadad, CreateUser, EditVAT, Refund, Spendings,RevenueAccount, VATAccount,Procurement, MoveStockAdmin, MoveStockAdminShelf, Discount, Sadad2, SearchCustomer, EditUser, AssignShelf, AssignQuantityWarehouse, Sadad33
+from .models import User, BranchOneProduct, BranchTwoProduct, CreditTransaction, DebitTransaction, Invoice, Product, Transaction, Inv, Account, VAT, Customer, RevenueTransaction, LoanTransaction
+#from flask_table import Table, Col, LinkCol
 from flask_wtf import Form as BaseForm
 from functools import wraps
 from passlib.hash import sha256_crypt
@@ -47,7 +47,7 @@ from sqlalchemy import desc
 from datetime import date
 from sqlalchemy.sql import func
 from calendar import monthrange
-import hexdump
+#import hexdump
 import numpy as np
 #import datetime1 from 
 #from urllib import urlencode, quote, unquote
@@ -72,7 +72,7 @@ def loadExcel():
   #df1 = xl.parse('Sheet1')
 
   # Give the location of the file 
-  path = "C:\\Users\\Reham\\Desktop\\tabs3.xlsx"
+  path = "C:\\Users\\Reham\\Desktop\\tabs4.xlsx"
     
   # To open the workbook  
   # workbook object is created 
@@ -101,6 +101,9 @@ def loadExcel():
     cell_obj3 =   sheet_obj.cell(row = i, column = 6) # Bulk Price
     cell_obj4 =   sheet_obj.cell(row = i, column = 7) # Product Expense
 
+    print(str(cell_obj1.value))
+
+    """
 
     print(cell_obj.value)
     print(str(cell_obj1.value))
@@ -120,14 +123,17 @@ def loadExcel():
     #print(cell_obj3.value)
 
 
+    """
+
   # Print value of cell object  
   # using the value attribute 
     print("Excel Data")
     print(i)
     #print(cell_obj.value)
-    #product = Product(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, shelf=cell_obj1.value, quantity=0)
-    product1 = Product(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, single_expense = cell_obj4.value, bulk_bulk_expense = 0, bulk_expense= cell_obj4.value, shelf=" ", quantity=0)
-    #product2 = BranchTwoProduct(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, shelf=cell_obj1.value, quantity=0)
+    product = Product(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, single_expense = cell_obj4.value, bulk_bulk_expense = cell_obj4.value, bulk_expense= cell_obj4.value, shelf="", quantity=0)
+    product1 = BranchOneProduct(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, single_expense = cell_obj4.value, bulk_bulk_expense = cell_obj4.value, bulk_expense= cell_obj4.value, shelf=cell_obj1.value, quantity=0)
+    product2 = BranchTwoProduct(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, single_expense = cell_obj4.value, bulk_bulk_expense = cell_obj4.value, bulk_expense= cell_obj4.value, shelf="", quantity=0)
+    #product2 = BranchOneProduct(name=cell_obj.value, bulk_price = cell_obj3.value , bulk_bulk_price = 0, single_price=cell_obj2.value, shelf=cell_obj1.value, quantity=0)
     ###product = Product.query.filter_by(name=cell_obj.value).first()
     ########product1 = BranchOneProduct.query.filter_by(name=cell_obj.value).first()
     ########product1.shelf = string
@@ -145,9 +151,9 @@ def loadExcel():
     ###db.session.commit()
 
 
-    #db.session.add(product)
+    db.session.add(product)
     db.session.add(product1)
-    #db.session.add(product2)
+    db.session.add(product2)
     try:
       db.session.commit()
     except IntegrityError as err:
@@ -174,7 +180,7 @@ def loadExcelCustomer():
   #df1 = xl.parse('Sheet1')
 
   # Give the location of the file 
-  path = "C:\\Users\\Reham\\Desktop\\tab4.xlsx"
+  path = "C:\\Users\\Reham\\Desktop\\tab10.xlsx"
     
   # To open the workbook  
   # workbook object is created 
@@ -224,6 +230,9 @@ def dashboard():
     form = LoginForm(request.form)
     print("Inside /login")
     print(form.errors)
+    cust = Customer.query.filter_by(id=1).first()
+    print("Customer remaning balance: ")
+    #print(cust.remaining_balance)
     if form.validate():
         print("inside form validation")
         print(form.username.data)
@@ -243,24 +252,34 @@ def zeroAccount():
   account.balance = 0
   vat_account = Account.query.filter_by(id=2).first()
   vat_account.balance = 0
+  revenue_account = Account.query.filter_by(id=3).first()
+  revenue_account.balance = 0
   db.session.commit()
 
 def deleteRows():
   db.session.query(CreditTransaction).delete()
   db.session.query(DebitTransaction).delete()
   db.session.query(Inv).delete()
-  db.session.query(Product).delete()
-  db.session.query(BranchOneProduct).delete()
-  db.session.query(BranchTwoProduct).delete()
+  db.session.query(RevenueTransaction).delete()
+  #db.session.query(Customer).delete()
+  #db.session.query(Product).delete()
+  #db.session.query(BranchOneProduct).delete()
+  #db.session.query(BranchTwoProduct).delete()
+  db.session.query(LoanTransaction).delete()
   db.session.commit()
 
 @app.route('/dash', methods=['GET', 'POST'])
 @login_required
 def dash():
+  rev = RevenueTransaction.query.all()
+  print("Revenue Transactions: ")
+  print(rev)
   cart =  {
 
 }
   #session['cart'] = cart
+  #db.session.drop_all()
+  #db.session.commit()
   my_user = current_user.get_id()
   print("Current user: ")
   print(my_user)
@@ -281,13 +300,26 @@ def dash():
   feb = revenue(2)
   jan = revenue(1)
 
+  print("January: ", jan)
+  print("February:" , feb)
+  print("March", march)
+  print("April", april)
+  print("May", may)
+  print("June", jun)
+  print("July", jul)
+  print("August", aug)
+  print("Septmber", sep)
+  print("Ocober", october)
+  print("November", nov)
+  print("December", dec)
+
   q1 = jan + feb + march
   q2 = april + may + jun
   q3 = jul + aug + sep
   q4 = october + nov + dec
 
   return render_template('index.html', user = u, big_half = big_half,  small_half = small_half, jan = jan, feb = feb, march = march, april=april, may=may, jun = jun, jul=jul,
-    aug=aug, sep = sep, october=october, nov=nov, dec=dec, q1=q1, q2=q1,q3=q3,q4=q4, username = u.username)
+    aug=aug, sep = sep, october=october, nov=nov, dec=dec, q1=q1, q2=q2,q3=q3,q4=q4, username = u.username)
 
 @app.route('/',  methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
@@ -295,6 +327,8 @@ def login():
     #return render_template('login.html')
     #user = g.user
     db.create_all()
+    #db.session.query(Customer).delete()
+    #db.session.commit()
     ##prod = Product.query.filter_by(name="ادبتر متحرك BSP مركز سيلة 1/8*1/4").first()
     ##print("CHECKING PORD SHELF FORMAT: ")
     ##print(prod.shelf)
@@ -310,24 +344,31 @@ def login():
     
     #db.session.query(BranchTwoProduct).delete()
     #db.session.commit()
-    #data = loadExcel()
-    #data = loadExcelCustomer()
-    #hashed_password = sha256_crypt.hash(str("123"))
-    #user = User(username="adminn", hashed_password=hashed_password,admin = True, name = "Abdulrahman Sulimani",
-    #phone = "050" , branch = "Kilo 7 Branch")
+    ##data = loadExcel()
+    ###data = loadExcelCustomer()
+    ##hashed_password = sha256_crypt.hash(str("123"))
+    ##user = User(username="adminnn", hashed_password=hashed_password,admin = True, admin_alike=False, warehouse = False, branch1=False, branch2 = False, name = "Abdulrahman Sulimani",
+    ##phone = "050" , branch = "Kilo 7 Branch")
 
 
-    #db.session.add(user)
-    #db.session.commit()
+    ##db.session.add(user)
+    ##db.session.commit()
 
-    #account = Account(balance=0, description = "Revenue Account")
-    #db.session.add(account)
-    #db.session.commit()
+    ##account = Account(balance=0, description = "current Account")
+    ##account2 = Account(balance=0, description = "vat Account")
+    ##account3 = Account(balance=0, description = "Revenue Account")
+    ##db.session.add(account)
+    ##db.session.add(account2)
+    ##db.session.add(account3)
+    ##db.session.commit()
+    ##vat_percentage = VAT(vat = 15)
+    ##db.session.add(vat_percentage)
+    ##db.session.commit()
     accounts = Account.query.all()
     print("Available accounts are: ")
     print(accounts)
-    #zeroAccount()
-    #deleteRows()
+    ###zeroAccount()
+    ###deleteRows()
     form = LoginForm(request.form)
     print("Inside /login")
     account = Account.query.filter_by(id=1).first()
@@ -338,6 +379,48 @@ def login():
     #print(all_ids)
     data = ""
     return render_template('login.html', form=form, data=data)
+
+
+
+@app.route('/assign-shelf-2', methods=['GET', 'POST'])
+def assignShelf():
+  form = AssignShelf(request.form)
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  requested_branch = ""
+  if form.submit.data:
+      print("INSIDE THE NEWEST FUNCTION")
+      print("Branch 2")
+      product = BranchTwoProduct.query.filter_by(name = form.autocomp.data).first()
+      product.shelf = form.shelf.data
+      db.session.commit()
+      flash(u'تمت المناقلة', 'success')
+      return render_template('assign-shelf-2.html', form=form, user=u )
+  return render_template('assign-shelf-2.html', form=form, user=u )
+
+
+@app.route('/assign-quantity-warehouse', methods=['GET', 'POST'])
+def assignQuantityWarehouse():
+  form = AssignQuantityWarehouse(request.form)
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  requested_branch = ""
+  if form.submit.data:
+      print("INSIDE THE NEWEST FUNCTION")
+      print("Branch 2")
+      product = Product.query.filter_by(name = form.autocomp.data).first()
+      product.quantity = form.quantity.data
+      db.session.commit()
+      flash(u'تمت المناقلة', 'success')
+      return render_template('assign-quantity-warehouse.html', form=form, user=u )
+  return render_template('assign-quantity-warehouse.html', form=form, user=u )
+
+
+
 
 @app.route('/admin-product-movement', methods=['GET', 'POST'])
 def adminProductMovement():
@@ -454,10 +537,33 @@ def adminProductMovementShelf():
 
 
 
-
-
 @app.route('/customer-statement', methods=['GET', 'POST'])
 def customerStatement():
+  print("Inside Customer's statement")
+  form = SearchCustomer(request.form)
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  if form.confirm.data:
+    cust_name = form.autocompcustomer.data
+    print("Customer name: ")
+    print(cust_name)
+    customer = Customer.query.filter_by(name=cust_name).first()
+    print("Customer Object: ")
+    print(customer)
+    loan_transactions = LoanTransaction.query.filter_by(customer_id=customer.id).all()
+    print("Loan Transactions: ")
+    print(loan_transactions)
+    return render_template('customer-statement.html', form=form, user=u, loan_transactions = loan_transactions, len = len(loan_transactions)) 
+  customer = Customer.query.filter_by(name="Wessam Gholam").first()
+  list_of_customers=[]
+  return render_template('customer-statement.html', form=form, user=u, list_of_customers = list_of_customers, list_of_balances = list_of_customers, len = len(list_of_customers)) 
+
+
+
+@app.route('/customer-statement1111', methods=['GET', 'POST'])
+def customerStatement11():
   print("Inside Customer's statement")
   form = Procurement(request.form)
   my_user = current_user.get_id()
@@ -561,6 +667,50 @@ def users():
     return render_template('users.html', users=users, len=len(users), form=form, user=u)
   users = User.query.all()
   return render_template('users.html', users=users, len=len(users), form=form, user=u)
+
+@app.route('/delete-users/<user_id>', methods=['GET', 'POST'])
+def deleteUsers(user_id):
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  user = User.query.filter_by(id=user_id).first()
+  db.session.delete(user)
+  db.session.commit()
+  users = User.query.all()
+  flash(u'تمت اضافة المستخدم', 'success')
+  return redirect(url_for('users'))
+
+
+@app.route('/edit-users/<user_id>', methods=['GET', 'POST'])
+def editUsers(user_id):
+  form = EditUser(request.form)
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  user = User.query.filter_by(id=user_id).first()
+  form.username1.data = user.username
+  if form.submit.data:
+    print("Inside submit clause: ")
+    print(form.username1.data)
+    print(form.password1.data)
+    user = User.query.filter_by(id=user_id).first()
+    print("Amended user: ")
+    print(user)
+    print(user.username)
+    print("Data from form: ")
+    print(form.username1.data)
+    password = form.password1.data
+    hashed_password = sha256_crypt.hash(str(password))
+    user.hashed_password = hashed_password
+    db.session.commit()
+    print("After amendment: ")
+    print(user.username)
+    return redirect(url_for('users'))
+  return render_template('edit-user.html', myuser=user.id,form=form, user=u)
+
+
 #@app.route('/',  methods=['GET', 'POST'])
 #@app.route('/login', methods=['GET', 'POST'])
 #def login():
@@ -743,18 +893,29 @@ def currentRevenueBalance():
   form.balance.data = account.balance
   return render_template('current-revenue.html', form=form, user=u) 
 
-@app.route("/vat-balance")
+@app.route("/vat-balance",methods=['GET','POST'])
 @login_required
 def VATBalance():
+  print("Inside VAT")
   my_user = current_user.get_id()
   print("Current user: ")
   print(my_user)
   u = User.query.filter_by(id=my_user).first()
-  form = VATAccount()
+  form = VATAccount(request.form)
   account = Account.query.filter_by(id=2).first()
   print("Current Balance BEFORE refund @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@: ")
   print(account.balance)
   form.balance.data = account.balance
+  if form.submit.data:
+    print("At submit")
+    now = datetime.now()
+    amount = form.vat_amount.data
+    account.balance = account.balance - float(amount)
+    db.session.commit()
+    dr = DebitTransaction(t_type = "DR", total=amount, date=now, description="تسديد الضريبة", invoice_id=None, current_balance= account.balance)
+    db.session.add(dr)
+    db.session.commit()
+    flash(u'تم التسديد بنجاح', 'success')
   return render_template('vat-account.html', form=form,user=u) 
 
 @app.route("/statement")
@@ -906,6 +1067,7 @@ def fetchStock():
 @app.route("/invoice/edit/<invoice_id>", methods=['GET', 'POST'])
 @login_required
 def invoiceEdit(invoice_id):
+  form = Discount(request.form)
   my_user = current_user.get_id()
   print("Current user: ")
   print(my_user)
@@ -927,11 +1089,40 @@ def invoiceEdit(invoice_id):
   list1 = json.loads(p.products) 
   list_of_items = []
   total = 0
+
+  if form.submit.data:
+
+    print("INSIDE DISCOUNT MODE")
+    print(float(form.discount_amount.data))
+    print(p.total)
+    new_total = p.total - float(form.discount_amount.data)
+    vat_value = VAT.query.all()
+    vat_value = vat_value[0].vat
+    vat = vat_value * new_total / 100
+    print("VAT CALCULATED: ")
+    print(vat)
+    new_total = new_total - vat
+    print(new_total)
+    new_total = round(new_total, 2)
+    p.total = new_total
+    p.vat_value = vat 
+    db.session.commit()
+    print(p.total)
+    #reCalculateInvoice(invoice_id)
+
+    list1 = json.loads(p.products) 
+    list_of_items = []
+    total = 0
+    for key, value in list1.items():
+      temp = [key,value]
+      list_of_items.append(temp)
+    return render_template('edit-invoice.html', form=form, products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= p.remaining_balance, category = p.category, user=u, invoice_id= invoice_id)
+
   for key, value in list1.items():
     temp = [key,value]
     list_of_items.append(temp)
   #return invoice_id;
-  return render_template('edit-invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= p.remaining_balance, category = p.category, user=u)
+  return render_template('edit-invoice.html', form=form, products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= p.remaining_balance, category = p.category, user=u, invoice_id= invoice_id)
   #return render_template('edit-invoice.html',invoice_id=invoice_id)
 
 
@@ -1325,24 +1516,22 @@ def revenue(month):
   #print(range_of_days)
   #print(range_of_days[0])
   #print(range_of_days[1])
-  start = date(year=2020,month=month,day=1)
-  end = date(year=2020,month=month,day=range_of_days[1])
+  start = date(year=today.year,month=month,day=1)
+  end = date(year=today.year,month=month,day=range_of_days[1])
 
-  crs = CreditTransaction.query.filter(CreditTransaction.date <= end).filter(CreditTransaction.date >= start).all()
+  crs = RevenueTransaction.query.filter(CreditTransaction.date <= end).filter(RevenueTransaction.date >= start).all()
   #session.query(func.avg(Rating.field2).label('average')).filter(Rating.url==url_string.netloc)
   #crs = CreditTransaction.query(func.sum(CreditTransaction.field2).label('average')).filter(CreditTransaction.date <= end).filter(CreditTransaction.date >= start).all()
-  drs = DebitTransaction.query.filter(DebitTransaction.date <= end).filter(DebitTransaction.date >= start).all() 
+  
+  ######drs = DebitTransaction.query.filter(DebitTransaction.date <= end).filter(DebitTransaction.date >= start).all() 
 
-  crs.extend(drs)
-  print("CR & DR together")
-  print(crs) 
+  #crs.extend(drs)
+  #print("CR & DR together")
+  #print(crs) 
 
   summ=0
   for cr in crs: 
-    if cr.t_type == "CR":
       summ += cr.total
-    elif cr.t_type == "DR":
-      summ -= cr.total  
   print("Total Revenue is: ")
   print(summ)
 
@@ -1385,7 +1574,10 @@ def showInvoice(invoice_id):
   now = datetime.now()
   print("Date & Time now")
   print(now)
-  return render_template('invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= None, category = p.inv_type)
+  now = date.today()
+  print(now)
+  print(p.inv_type)
+  return render_template('invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= None, category = p.inv_type, date=now, invoice_id=invoice_id)
 
 @app.route("/invoice/<invoice_id>")
 @login_required
@@ -1437,18 +1629,21 @@ def invoice(invoice_id):
 
     product = Product.query.filter_by(name=item[0]).first()
     paid = item[1][0] * item[1][1]
-    if p.category == "تجزئة":
+    if p.category == "تجزئة" or p.category == "Single":
       print("Single")
       revenue = product.single_expense
-    elif p.category == "جملة الجملة":
+    elif p.category == "جملة الجملة" or p.category == "Bulk Bulk":
       print("Bulk Bulk")
       revenue = product.bulk_bulk_expense
-    elif p.category == "جملة":
+    elif p.category == "جملة" or p.category == "Bulk":
       print("Bulk")
       revenue = product.bulk_expense
     else:
       print("INOVICE TYPE IS NON OF THE ABOVE")  
 
+    print("Expense is: ")
+    print(revenue)
+    print(product.single_expense)
     print(paid)
     revenue = revenue * item[1][1]
     print(revenue)
@@ -1462,7 +1657,10 @@ def invoice(invoice_id):
   vat_account = Account.query.filter_by(id=2).first()
   revenue_account = Account.query.filter_by(id=3).first()
   if p.inv_type != "Loan":
-    revenue_account.balance = revenue_account.balance + revenue_total
+    now = datetime.now()
+    revenue_account.balance = revenue_account.balance + revenue_total 
+    rev_transaction = RevenueTransaction(total=revenue_total, date=now, description="ارباح فاورة رقم " + str(p.id), invoice_id= p.id, current_balance = revenue_account.balance)
+    db.session.add(rev_transaction)
     db.session.commit()
   print("Current balance before update is ... +++++++++++++++++++++++++++++")
   print(account.balance)
@@ -1488,14 +1686,13 @@ def invoice(invoice_id):
     print(account.balance)
     print("LAST COMMITED CR Transaction")
     print(cr.id)
-    return render_template('invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= None, category = p.category)
+    return redirect(url_for('showInvoice', invoice_id=invoice_id))  
   elif p.inv_type == "Loan": 
     print("INV is LOAN .. No transaction is happening")
     print("Current balance AFTER update is ... +++++++++++++++++++++++++++++")
     print(account.balance)  
   #return invoice_id;
-    return render_template('invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= p.remaining_balance, category = p.category)
-
+    return redirect(url_for('showInvoice', invoice_id=invoice_id))
   elif p.inv_type == "شبكة":
     print("INV is CASH .. CR is happening")
     print("total minus vat value in cash is")
@@ -1516,7 +1713,9 @@ def invoice(invoice_id):
     print(account.balance)
     print("LAST COMMITED CR Transaction")
     print(cr.id)
-  return render_template('invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= None, category = p.category)
+    #return redirect('/show-invoice')
+  return redirect(url_for('showInvoice', invoice_id=invoice_id))
+  #return render_template('invoice.html',products=list_of_items, length= len(list_of_items), total = p.total, vat=p.vat_value, vat_percentage = p.vat_percentage, customer=curr_customer, remaining_balance= None, category = p.category)
 
 @app.route("/view-loans.html")
 @login_required
@@ -1533,6 +1732,124 @@ def viewLoans():
   print(productstore)
   #print(productstore[0].customer.name)
   return render_template('view-loans.html', invoices=productstore, len = len(productstore), user=u)
+
+
+@app.route("/loan-sadad/<customer_id>" , methods=['GET', 'POST'])
+@login_required
+def sadadLoans1(customer_id):
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  form = Sadad2(request.form)
+  sadad_amount = 0
+  if form.submit.data:
+    pay_amount = form.pay_amount.data
+    print("Entered Amount")
+    print(pay_amount)
+    current_account = Account.query.filter_by(id=1).first()
+    vat_account = Account.query.filter_by(id=2).first()
+    revenue_account = Account.query.filter_by(id=3).first()
+
+    vat_value = VAT.query.all()
+    vat_value = vat_value[0].vat
+
+    new_vat  = vat_value  * float(pay_amount) / 100
+    print("VAT amount: ")
+    print(new_vat)
+
+    paid_amount = float(pay_amount) - new_vat
+    print("Paid amount minus vat")
+    print(paid_amount)
+
+    current_account.balance = current_account.balance + paid_amount
+    revenue_account.balance = revenue_account.balance + paid_amount
+    vat_account.balance = vat_account.balance + new_vat
+
+    cust = Customer.query.filter_by(id=customer_id).first()
+    cust.remaining_balance = cust.remaining_balance - float(pay_amount)
+
+    db.session.commit()
+
+    now = datetime.now()
+
+    loan_transaction = LoanTransaction(total = pay_amount, date = now, description="تسديد دين", current_balance = cust.remaining_balance, customer_id = customer_id)
+    rev_transaction = RevenueTransaction(total=paid_amount, date=now, description="ارباح فاورة رقم ", invoice_id= None, current_balance = revenue_account.balance)
+
+    db.session.add(loan_transaction)
+    db.session.add(rev_transaction)
+    db.session.commit()
+
+    print("Loan Transactions are: ")
+    print(LoanTransaction.query.all())
+
+
+    print("ok")
+    flash(u'تمت التسديد', 'success')
+    return render_template('loan-sadad.html', form = form, customer_id = customer_id, user=u)
+  cust = Customer.query.filter_by(id=customer_id).first()  
+  form.customer_id.data = customer_id
+  form.remianing_balance.data = cust.remaining_balance
+  return render_template('loan-sadad.html', form = form, customer_id = customer_id, user=u)
+
+
+
+@app.route("/loan-sadad-existing-records" , methods=['GET', 'POST'])
+@login_required
+def sadadLoans2():
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  form = Sadad33(request.form)
+  sadad_amount = 0
+  if form.submit.data:
+    cust = Customer.query.filter_by(name=form.autocomp.data).first()
+    customer_id = cust.id
+    pay_amount = form.pay_amount.data
+    print("Entered Amount")
+    print(pay_amount)
+    current_account = Account.query.filter_by(id=1).first()
+    vat_account = Account.query.filter_by(id=2).first()
+    revenue_account = Account.query.filter_by(id=3).first()
+
+    vat_value = VAT.query.all()
+    vat_value = vat_value[0].vat
+
+    new_vat  = vat_value  * float(pay_amount) / 100
+    print("VAT amount: ")
+    print(new_vat)
+
+    paid_amount = float(pay_amount) - new_vat
+    print("Paid amount minus vat")
+    print(paid_amount)
+
+    current_account.balance = current_account.balance + paid_amount
+    revenue_account.balance = revenue_account.balance + paid_amount
+    vat_account.balance = vat_account.balance + new_vat
+
+
+    db.session.commit()
+
+    now = datetime.now()
+
+    loan_transaction = LoanTransaction(total = pay_amount, date = now, description="سداد ذمم سنة 2020", current_balance = cust.remaining_balance, customer_id = customer_id)
+    rev_transaction = RevenueTransaction(total=paid_amount, date=now, description="ارباح فاورة رقم ", invoice_id= None, current_balance = revenue_account.balance)
+
+    db.session.add(loan_transaction)
+    db.session.add(rev_transaction)
+    db.session.commit()
+
+    print("Loan Transactions are: ")
+    print(LoanTransaction.query.all())
+
+
+    print("ok")
+    flash(u'تمت التسديد', 'success')
+    return render_template('loan-sadad-existing-records.html', form = form, user=u)
+  return render_template('loan-sadad-existing-records.html', form = form, user=u)
+
+
 
 @app.route("/sadad-loans/<invoice_id>" , methods=['GET', 'POST'])
 @login_required
@@ -1940,25 +2257,26 @@ def reCalculateInvoice(id):
       current_account.balance = current_account.balance - diff
       vat_account.balance = vat_account.balance + diff
       db.session.commit()
-      dr = DebitTransaction(t_type="DR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id), invoice_id=id, current_balance = current_account.balance)
-      cr = CreditTransaction(t_type="CR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id) + "ايداع لحساب الضريبية", invoice_id=id, current_balance = current_account.balance)
-      db.session.add(dr)
-      db.session.add(cr)
+      #dr = DebitTransaction(t_type="DR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id), invoice_id=id, current_balance = current_account.balance)
+      #cr = CreditTransaction(t_type="CR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id) + "ايداع لحساب الضريبية", invoice_id=id, current_balance = current_account.balance)
+      #db.session.add(dr)
+      #db.session.add(cr)
       db.session.commit()
     elif vat < inv.vat_value:
       diff = inv.vat_value - vat
-      current_account.balance = current_account.balance + diff
+      #current_account.balance = current_account.balance + diff
       vat_account.balance = vat_account.balance - diff
       db.session.commit()
-      dr = DebitTransaction(t_type="DR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id) + "خصم حساب الضريبة", invoice_id=id, current_balance = current_account.balance)
-      cr = CreditTransaction(t_type="CR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id), invoice_id=id, current_balance = current_account.balance)
-      db.session.add(dr)
-      db.session.add(cr)
+      #dr = DebitTransaction(t_type="DR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id) + "خصم حساب الضريبة", invoice_id=id, current_balance = current_account.balance)
+      #cr = CreditTransaction(t_type="CR", total=diff, date=now, description="تعديل فاتورة رقم " + str(id), invoice_id=id, current_balance = current_account.balance)
+      #db.session.add(dr)
+      #db.session.add(cr)
       db.session.commit()
 
     inv.total = total + vat
     inv.vat_value = vat
     inv.is_modified = True
+    #setRevenue(inv.id, )
     db.session.commit()
     print("Total Invoice: ")
     print(inv.total)
@@ -1989,8 +2307,16 @@ def setRevenue(id, name, price, quantity, old_price, old_quantity):
   price_minus_expense = abs(price-expense)
   revenue = quantity_difference * price_minus_expense
   revenue_account = Account.query.filter_by(id=3).first()
-  revenue_account.balance = revenue_account.balance + revenue  
-  db.session.commit()  
+  old_total_price = old_price * old_quantity
+  new_total_price = price * quantity
+  if new_total_price > old_total_price: 
+    revenue_account.balance = revenue_account.balance + revenue
+  elif new_total_price < old_total_price:
+    revenue_account.balance = revenue_account.balance - revenue
+  #rev_transaction = RevenueTransaction(total=revenue_total, date=now, description="ارباح فاورة رقم " + str(p.id), invoice_id= p.id, current_balance = revenue_account.balance)  
+  db.session.commit()
+  print("Reevenue Account Balance: ")
+  print(revenue_account.balance)  
 
 def amendChangestoInv(id, name, price, quantity):
     now = datetime.now()
@@ -2004,9 +2330,11 @@ def amendChangestoInv(id, name, price, quantity):
     print(json.loads(inv.products))
     y=json.loads(inv.products)
     print(y[name])
+
     ################################################
     final_price = 0
     final_quantity = 0
+    print("Inside amendChangestoInv() ")
     print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
     print("Registered price and quantity")
     print(y[name][0])
@@ -2020,7 +2348,8 @@ def amendChangestoInv(id, name, price, quantity):
     print(inv.inv_type)
     print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
     if inv.inv_type != "Loan":
-      setRevenue(id,name,price,quantity,y[name][0],y[name][1])
+      print("Sure")
+      #####setRevenue(id,name,price,quantity,y[name][0],y[name][1])
     # y[name][0] is the registered price
     # y[name][1] is the registered quantity
     if quantity > y[name][1]:
@@ -2067,16 +2396,18 @@ def amendChangestoInv(id, name, price, quantity):
       print(price_to_be_refunded)
       final_price = price_to_be_refunded
       final_quantity = quantity
-      account = Account.query.filter_by(id=1)
-      vat_account = Account.query.filter_by(id=2)
+      account = Account.query.filter_by(id=1).first()
+      vat_account = Account.query.filter_by(id=2).first()
 
-      account.balance = account.balance + final_price
+      account.balance = account.balance - final_price
       db.session.commit()
       cr = DebitTransaction(t_type="DR", total=price_to_be_refunded, date=now, description="تعديل فاتورة رقم " + str(id), invoice_id=id, current_balance = account.balance)
       db.session.commit()
     else:
         print("P == REGISTERED P")
         final_price = y[name][0] * final_quantity
+        print(y[name][0])
+        print(y[name][1])
         #final_quantity = y[name][1]
 
 
@@ -2091,6 +2422,22 @@ def amendChangestoInv(id, name, price, quantity):
     print(y[name][1])
     print("## End of Changes ##")
     ################################################
+    current_account = Account.query.filter_by(id=1).first()
+    revenue_account = Account.query.filter_by(id=3).first()
+    print("Current Account Balance:")
+    print(current_account.balance)
+    print("Reveneue Account Balance: ")
+    print(revenue_account.balance)
+
+    print("Old Values: ")
+    print(y[name][0])
+    print(y[name][1])
+
+    print("New Values: ")
+    print(price)
+    print(quantity)
+
+    reCalculateRevenue(id, name, price, quantity, y[name][0],y[name][1])
     y[name][0] = price
     y[name][1] = quantity
     print(y)
@@ -2106,6 +2453,176 @@ def amendChangestoInv(id, name, price, quantity):
     #if inv.initiator == "Branch1":
       #product = 
     #elif inv.initiator == "Branch2"
+
+def reCalculateRevenue(id, name, price,quantity,old_price,old_quantity):
+  print("Inside recalulate Revenue")
+  print(id)
+  print(name)
+  print(price)
+  print(quantity)
+  product = Product.query.filter_by(name = name).first()
+  product_expense = product.single_expense
+  price_after_change = price - product_expense
+  new_total = price_after_change * quantity
+  old_total = old_price * old_quantity
+  revenue_account = Account.query.filter_by(id=3).first()
+  revenue_account.balance = revenue_account.balance - (old_total - product_expense)
+  db.session.commit()
+  print("Old total")
+  print(old_total)
+  print("New total")
+  print(new_total)
+  revenue_account.balance = revenue_account.balance + new_total
+  db.session.commit()
+
+def placeChangesToInvoice(id, name, price, quantity):
+    inv= Inv.query.filter_by(id=id).first()
+    product = None
+    print(inv)
+    print(inv.products)
+    print(type(inv.products))
+    print(json.loads(inv.products))
+    y=json.loads(inv.products)
+    print(y[name])
+
+    ################################################
+    final_price = 0
+    final_quantity = 0
+    print("Inside placeChangesToInvoice() ")
+    print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+    print("Registered price and quantity")
+    print(y[name][0])
+    print(y[name][1])
+    print("The new price and quantity values")
+    print(price)
+    print(quantity)
+    print("Invoice category: ")
+    print(inv.category)
+    print("Invoice type: ")
+    print(inv.inv_type)
+    print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
+
+    if quantity > y[name][1]: 
+      print("New quantity is bigger")
+    elif quantity < y[name][1]:   
+      print("New quantity is smaller")
+    else:
+      print("New and old quantities are equal")
+
+    if price > y[name][0]:
+      print("New price is greater")
+    elif price < y[name][0]:
+      print("New price is smaller")
+    else:
+      print("New and old prices and equal")
+
+    p= Inv.query.filter_by(id=id).first()
+    product = Product.query.filter_by(name=name).first()
+    expense = 0
+    revenue = 0
+    if p.category == "تجزئة" or p.category == "Single":
+      print("Single")
+      expense = product.single_expense
+    elif p.category == "جملة الجملة" or p.category == "Bulk Bulk":
+      print("Bulk Bulk")
+      expense = product.bulk_bulk_expense
+    elif p.category == "جملة" or p.category == "Bulk":
+      print("Bulk")
+      expense = product.bulk_expense
+    else:
+      print("INOVICE TYPE IS NON OF THE ABOVE")
+
+
+    ### #### ### ### ### ### ### ###
+    if inv.inv_type != "Loan":
+      total_old = y[name][0] * y[name][1]
+      total_new = price * quantity
+      print("Old Total")
+      print(total_old)
+      print("New Total")
+      print(total_new)
+
+      vat_value = VAT.query.all()
+      vat_value = vat_value[0].vat
+
+      old_vat = vat_value * total_old / 100
+      new_vat = vat_value * total_new / 100
+      print("Old VAT")
+      print(old_vat)
+      print("New VAT")
+      print(new_vat)
+
+
+      #print(y[name][0])
+      #print(y[name][1])
+      #print(expense)
+
+      old_revenue = abs(total_old - (y[name][1] * expense) )
+      new_revenue = abs(total_new - (quantity * expense) )
+      print("Old Revenue")
+      print(old_revenue)
+      print("New Revenue")
+      print(new_revenue)
+
+      current_account = Account.query.filter_by(id=1).first()
+      vat_account = Account.query.filter_by(id=2).first()
+      revenue_account = Account.query.filter_by(id=3).first()
+
+      current_account.balance = current_account.balance - total_old
+      vat_account.balance = vat_account.balance - old_vat
+      revenue_account.balance =  revenue_account.balance - old_revenue
+
+      db.session.commit()
+
+      current_account.balance = current_account.balance + total_new
+      vat_account.balance = vat_account.balance + new_vat
+      revenue_account.balance =  revenue_account.balance + new_revenue
+
+      rev_transaction = RevenueTransaction.query.filter_by(invoice_id=id).first()
+      rev_transaction.total = new_revenue
+      db.session.commit()
+
+
+    y[name][0] = price
+    y[name][1] = quantity
+    print(y)
+    print(json.dumps(y))
+    final_version_of_products = json.dumps(y)
+    inv.products = final_version_of_products
+    db.session.commit()
+
+    inv = Inv.query.filter_by(id=id).first()
+    list1=json.loads(inv.products)
+    list_of_items = []
+    for key, value in list1.items():
+      temp = [key,value]
+      list_of_items.append(temp)
+      db.session.commit()
+    y = json.dumps(list1)
+    print(y)
+    total = 0
+    for item in list_of_items:
+      total = total + (item[1][0] * item[1][1])
+    print("The total of invoice nad transactions is ...")
+    print(total)
+
+    vat_value = VAT.query.all()
+    vat_value = vat_value[0].vat
+
+    new_vat_invoice  = vat_value * total / 100
+    inv.vat_value = new_vat_invoice
+    inv.total = total + new_vat_invoice
+
+    db.session.commit()
+
+@app.route('/loanPayments',methods=['GET', 'POST'])
+def loanPayments():
+  my_user = current_user.get_id()
+  print("Current user: ")
+  print(my_user)
+  u = User.query.filter_by(id=my_user).first()
+  customers = Customer.query.filter(Customer.remaining_balance > 0, Customer.remaining_balance != None).all()
+  return render_template('loan-payments.html', customers=customers, len = len(customers), user=u)
 
 
 
@@ -2125,7 +2642,8 @@ def editables():
     price = float(title['price'])
     quantity = int(title['quantity'])
     name = title['name']
-    amendChangestoInv(id, name, price,quantity)
+    #####amendChangestoInv(id, name, price,quantity)
+    placeChangesToInvoice(id, name, price,quantity)
 
     #list_of_items = []
     #print(title[' '])
@@ -2515,6 +3033,8 @@ def sellBranchOneLoanDB1():
     print(Inv.query.all())
     invvv= Inv.query.all()
     print(invvv[0].products)
+    c.remaining_balance = c.remaining_balance + total
+    db.session.commit()
     return redirect(url_for('invoice', invoice_id=inv.id))  
   else:
     list1 = session.get('cart')
@@ -2798,6 +3318,8 @@ def sellBranchTwoLoanDB1():
     print(Inv.query.all())
     invvv= Inv.query.all()
     print(invvv[0].products)
+    c.remaining_balance = c.remaining_balance + total
+    db.session.commit()
     return redirect(url_for('invoice', invoice_id=inv.id))  
   else:
     list1 = session.get('cart')
@@ -4651,7 +5173,7 @@ def addCustomersToDB():
     print("inside form validation")
     print(form.name.data)
     print(form.mobile.data)
-    customer = Customer(name=form.name.data, mobile=form.mobile.data)
+    customer = Customer(name=form.name.data, mobile=form.mobile.data, remaining_balance = 0)
     db.session.add(customer)
     db.session.commit()
   return 'ok'
@@ -4900,6 +5422,9 @@ def viewCustomers():
   my_user = current_user.get_id()
   print("Current user: ")
   print(my_user)
+  cust = Customer.query.filter_by(id=1).first()
+  print("Customer remaning balance: ")
+  print(cust.remaining_balance)
   u = User.query.filter_by(id=my_user).first()
   customers = Customer.query.all()
   print(customers)
@@ -4927,7 +5452,7 @@ def tablesB1():
 
   print("After Join")
   print("::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
-  print(products2[0].Product.quantity)
+  #print(products2[0].Product.quantity)
   #invoices = Inv.query.filter_by(initiator="Branch1").join(Customer, Inv.customer_id==Customer.id).order_by(Inv.date).all()
   #print(products)
   print(len(products))

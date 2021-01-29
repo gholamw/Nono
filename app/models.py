@@ -232,6 +232,24 @@ class Transaction(db.Model):
         self.balance = balance
         self.p_type = p_type
 
+class LoanTransaction(db.Model):
+    __tablename__ = 'loantransaction'
+    id = db.Column(db.Integer, primary_key=True)
+    total = db.Column(db.Float)
+    date = db.Column(db.DateTime)
+    description = db.Column(db.String(64))
+    current_balance = db.Column(db.Float)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id')) 
+
+class RevenueTransaction(db.Model):
+    __tablename__ = 'revtransaction'
+    id = db.Column(db.Integer, primary_key=True)
+    total = db.Column(db.Float)
+    date = db.Column(db.DateTime)
+    description = db.Column(db.String(64))
+    invoice_id = db.Column(db.Integer, db.ForeignKey('inv.id')) 
+    current_balance = db.Column(db.Float)
+
 class CreditTransaction(db.Model):
     __tablename__ = 'crtransaction'
     id = db.Column(db.Integer, primary_key=True)
@@ -240,7 +258,8 @@ class CreditTransaction(db.Model):
     date = db.Column(db.DateTime)
     description = db.Column(db.String(64))
     invoice_id = db.Column(db.Integer, db.ForeignKey('inv.id')) 
-    current_balance = db.Column(db.Float)  
+    current_balance = db.Column(db.Float)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))   
 
 class DebitTransaction(db.Model):
     __tablename__ = 'drtransaction'
@@ -293,7 +312,9 @@ class Customer(db.Model):
     name = db.Column(db.String(64), index=True,unique=True)
     mobile = db.Column(db.Integer)
     #invoices = db.relationship("Inv", back_populates="customer")
+    remaining_balance = db.Column(db.Float)
     invoices = db.relationship('Inv', backref='customer', lazy=True)
+    #remaining_balance = db.Column(db.Float)
 
 
 class Procurement(db.Model):

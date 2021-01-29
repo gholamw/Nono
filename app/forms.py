@@ -89,7 +89,14 @@ class AmendProductForm(Form):
 class SearchForm(Form):
     autocomp = TextField('اختر صنف', id='autocomplete')
 
+class SearchCustomer(Form):
+	autocompcustomer = TextField('اختر عميل', id='autocompletecustomer')
+	confirm = SubmitField('عرض')
+
 class SellCash(Form):
+	autocompshelf = TextField('ادخل رقم الدرج')
+	products = SelectField(u'اختر الصنف', choices = {})
+	check = SubmitField('عرض الاصناف')
 	inv_category = SelectField(u'اختر نوع الفاتورة', choices = invoiceCategories)
 	autocompcustomer = TextField('اختر عميل', id='autocompletecustomer')
 	autocomp = TextField('اختر صنف', id='autocomplete')
@@ -128,6 +135,17 @@ class MoveStockAdmin(Form):
 	submit = SubmitField('تاكيد المناقلة')
 
 
+class AssignShelf(Form):
+	autocomp = TextField('اختر الصنف', id='autocomplete')
+	shelf = TextField('ادخل رقم الدرج', validators=[DataRequired()])
+	submit = SubmitField('تاكيد')
+
+class AssignQuantityWarehouse(Form):
+	autocomp = TextField('اختر الصنف', id='autocomplete')
+	quantity = IntegerField('الكمية', validators=[DataRequired()])
+	submit = SubmitField('تاكيد')	
+
+
 class MoveStockAdminShelf(Form):
 	autocomp = TextField('ادخل رقم الدرج', id='autocomplete')
 	branch = SelectField(u'اختر الفرع', choices = myChoices1)
@@ -138,9 +156,21 @@ class MoveStockAdminShelf(Form):
 
 
 class Sadad(Form):
-	invoice_id = TextField('رقم الفاتورة', id='autocomplete')
+	customer_id = TextField('رقم الفاتورة', id='autocomplete')
 	remianing_balance = DecimalField('المبلغ المتبقي للسداد:', validators=[DataRequired()])
 	pay_amount = DecimalField('مبلغ السداد:', validators=[DataRequired()])
+	submit = SubmitField('تاكيد السداد')
+
+class Sadad2(Form):
+	customer_id = TextField('رقم الفاتورة', id='autocomplete')
+	remianing_balance = DecimalField('المبلغ المتبقي للسداد:', validators=[DataRequired()])
+	pay_amount = DecimalField('مبلغ السداد:', validators=[DataRequired()])
+	submit = SubmitField('تاكيد السداد')
+
+class Sadad33(Form):
+	autocomp = TextField('رقم الفاتورة', id='autocompletecustomer')
+	pay_amount = DecimalField('مبلغ السداد:', validators=[DataRequired()])
+	description = StringField('وصف العملية', validators=[DataRequired()])
 	submit = SubmitField('تاكيد السداد')
 
 def my_length_check(form, field):
@@ -192,3 +222,18 @@ class RevenueAccount(Form):
 
 class VATAccount(Form):
 		balance = DecimalField('الرصيد الضريبي الحالي ', validators=[DataRequired()])
+		vat_amount = DecimalField('مبلغ التسديد', validators=[DataRequired()])
+		submit = SubmitField('سداد')
+
+class Discount(Form):
+	discount_amount = DecimalField('ادخل مبلغ الخصم', validators=[DataRequired()])
+	submit = SubmitField('تفعيل الخصم')
+
+class VATPayment(Form):
+	vat_amount = DecimalField('مبلغ التسديد', validators=[DataRequired()])
+	submit = SubmitField('سداد')
+
+class EditUser(Form):
+	username1 = StringField('ادخل اسم المستخدم:', validators=[InputRequired(),my_length_check])
+	password1 = TextField('ادخل الرقم السري:', validators=[DataRequired()])
+	submit = SubmitField('تعديل')
