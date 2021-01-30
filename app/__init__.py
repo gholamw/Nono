@@ -4,7 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_script import Manager
-from flask_migrate import Migrate, MigrateCommand
+#from flask_migrate import Migrate, MigrateCommand
 
 app = Flask(__name__, static_url_path='/static')
 Bootstrap(app)
@@ -14,9 +14,9 @@ app.config['SECRET_KEY'] = 'you-will-never-guess'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 #app.run(threaded=True)
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+#migrate = Migrate(app, db)
 manager = Manager(app)
-manager.add_command('db', MigrateCommand)
+#manager.add_command('db', MigrateCommand)
 db.create_all()
 
 lm = LoginManager(app) #login manager
